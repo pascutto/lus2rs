@@ -18,3 +18,16 @@ _build/
 # oasis generated files
 setup.data
 setup.log
+
+# Makefile generated files
+.depend
+lus2rs
+
+# menhir generated files
+lustre_parser.ml
+lustre_parser.mli
+*.automaton
+*.conflicts
+
+# ocamllex generated files
+lustre_lexer.ml
