@@ -69,9 +69,17 @@ let () =
       Typed_ast_printer.print_node_list_std ft
     end;
     if !type_only then exit 0;
-    if main_node = "" then exit 0;
 
-    let fs = Scheduler.schedule ft in
+    let fn = Normalizer.normalize_file ft in
+    if !verbose then begin
+      Format.printf "/**************************************/@.";
+      Format.printf "/*           Normalized ast           */@.";
+      Format.printf "/**************************************/@.";
+      Typed_ast_printer.print_node_list_std fn
+    end;
+    if !norm_only then exit 0;
+
+    let fs = Scheduler.schedule fn in
     if !verbose then begin
       Format.printf "/**************************************/@.";
       Format.printf "/*           Scheduled ast            */@.";

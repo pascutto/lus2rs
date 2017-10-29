@@ -1,4 +1,4 @@
-CMO=lustre_lexer.cmo lustre_parser.cmo ident.cmo typed_ast_printer.cmo typer.cmo scheduler.cmo lus2rs.cmo
+CMO=lustre_lexer.cmo lustre_parser.cmo ident.cmo typed_ast_printer.cmo typer.cmo normalizer.cmo scheduler.cmo lus2rs.cmo
 GENERATED = lustre_lexer.ml lustre_parser.ml lustre_parser.mli
 BIN=lus2rs
 FLAGS=

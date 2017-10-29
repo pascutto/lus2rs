@@ -24,7 +24,6 @@ let compare = Pervasives.compare
 let print fmt x =
   Format.fprintf fmt "%s__%i" x.name x.id
 
-(* Utils *)
 let print_to_string print x =
   ignore (Format.flush_str_formatter ());
   print Format.str_formatter x;
