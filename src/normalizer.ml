@@ -82,7 +82,14 @@ let rec normalize ctx e =
     in
     (x_decl@new_vars, x_eq::new_eqs), x_expr
 
-  | TE_arrow(c,e1) ->
+  | TE_when (e, cond, clk) ->
+    let ctx, e' = normalize ctx e in
+    let ctx, clk' = normalize ctx clk in
+    ctx, {e with texpr_desc = TE_when(e', cond, clk')}
+
+  | TE_merge (id, le) -> assert false
+
+  | TE_arrow (c,e1) ->
     let (new_vars,new_eqs), e1' = normalize ctx e1 in
     let x_decl, x_patt, x_expr = new_pat e in
     let x_eq =

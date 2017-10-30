@@ -4,22 +4,22 @@ open Format
 open Lustre_ast_types
 open Lustre_typed_ast
 
-let rec print_list f sep fmt l = match l with
+let rec print_list f sep fmt = function
   | [] -> ()
   | [x] -> f fmt x
   | h :: t -> fprintf fmt "%a%s@ %a" f h sep (print_list f sep) t
 
-let rec print_list_eol f sep fmt l = match l with
+let rec print_list_eol f sep fmt = function
   | [] -> ()
   | [x] -> fprintf fmt "%a%s" f x sep
   | h :: t -> fprintf fmt "%a%s@\n%a" f h sep (print_list_eol f sep) t
 
-let print_const fmt c = match c with
+let print_const fmt = function
   | Cbool b -> fprintf fmt "%b" b
   | Cint i -> fprintf fmt "%d" i
   | Creal f -> fprintf fmt "%f" f
 
-let print_binop fmt op = match op with
+let print_binop fmt = function
   | Op_eq -> fprintf fmt "="
   | Op_neq -> fprintf fmt "<>"
   | Op_lt -> fprintf fmt "<"
@@ -35,7 +35,7 @@ let print_binop fmt op = match op with
   | Op_or -> fprintf fmt "or"
   | Op_impl -> fprintf fmt "=>"
 
-let print_unop fmt op = match op with
+let print_unop fmt = function
   | Op_not -> fprintf fmt "not"
   | Op_uminus | Op_uminus_f -> fprintf fmt "-"
 
@@ -58,21 +58,29 @@ let rec print_exp fmt e = match e.texpr_desc with
   | TE_pre e ->
       fprintf fmt "pre (@[%a@])" print_exp e
   | TE_current e ->
-      fprintf fmt "current (@[%a@])" print_exp e
+    fprintf fmt "current (@[%a@])" print_exp e
+  | TE_when (e, cond, clk) -> fprintf fmt "@[(@[%a@]) when @[%a@](@[%a@])@]" print_exp e print_exp cond print_exp clk
+  | TE_merge(clk,le) ->
+    fprintf fmt "merge @[%a@] @[%a@]" Ident.print clk print_matching le
   | TE_tuple e_list ->
       fprintf fmt "(@[%a@])" print_tuple_arg_list e_list
 
-and print_arg_list fmt e_list = match e_list with
+and print_arg_list fmt = function
   | [] -> ()
   | [x] -> fprintf fmt "%a" print_exp x
   | h :: t -> fprintf fmt "%a,@ %a" print_exp h print_arg_list t
 
-and print_tuple_arg_list fmt e_list = match e_list with
+and print_matching fmt = function
+  | [] -> ()
+  | (c, e)::t -> fprintf fmt "@[(@[%a@] -> @[%a@])@] @ %a"
+                   print_exp c print_exp e print_matching t
+
+and print_tuple_arg_list fmt = function
   | [] -> assert false
   | [x] -> fprintf fmt "%a" print_exp x
   | h :: t -> fprintf fmt "%a,@ %a" print_exp h print_arg_list t
 
-and print_const_exp fmt ce_list = match ce_list with
+and print_const_exp fmt = function
   | [] -> assert false
   | [c] -> fprintf fmt "%a" print_const c
   | h :: t -> fprintf fmt "%a,@ %a" print_const h print_const_exp t
@@ -82,12 +90,10 @@ let print_eq fmt eq =
     (print_list Ident.print ",") eq.teq_patt.tpatt_desc
     print_exp eq.teq_expr
 
-let print_base_type fmt bty = match bty with
+let print_base_type fmt = function
   | Tbool -> fprintf fmt "bool"
   | Tint -> fprintf fmt "int"
   | Treal -> fprintf fmt "real"
-
-(* let print_type = print_list print_cbase_type "*" *)
 
 let print_var_dec fmt (name, ty) =
   fprintf fmt "%a : %a" Ident.print name print_base_type ty

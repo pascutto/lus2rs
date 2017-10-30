@@ -22,7 +22,7 @@ Clément PASCUTTO <clement.pascutto@ens.fr
 
 %}
 
-%token AND ARROW BOOL COLON COMMA LE LT GE GT FBY
+%token AND ARROW BOOL COLON COMMA LE LT GE GT FBY WHEN MERGE
 %token DIV ELSE EQUALS NEQ REAL IF IMPL INT LET LPAR MINUS MOD NODE NOT OR %token PLUS PRE CURRENT RETURNS RPAR SEMICOLON TIMES TEL THEN VAR
 %token <bool> BOOL_CONST
 %token <int> INT_CONST
@@ -31,8 +31,8 @@ Clément PASCUTTO <clement.pascutto@ens.fr
 %token EOF
 
 %nonassoc ELSE
-%right ARROW
-%right FBY
+%right ARROW FBY
+%left WHEN
 %left IMPL
 %left OR
 %left AND
@@ -94,7 +94,7 @@ pattern:
 expr:
   | LPAR expr RPAR                { $2 }
   | const                         { $1 }
-  | IDENT                         { mk_expr (LSE_ident $1)}
+  | IDENT                         { mk_expr (LSE_ident $1) }
   | IDENT LPAR separated_list(COMMA, expr) RPAR
                                   { mk_expr (LSE_app ($1, $3))}
   | IF expr THEN expr ELSE expr   { mk_expr (LSE_if ($2, $4, $6)) }
@@ -114,6 +114,9 @@ expr:
   | expr OR expr                  { mk_expr (LSE_binop (Op_or, $1, $3)) }
   | expr IMPL expr                { mk_expr (LSE_binop (Op_impl, $1, $3)) }
   | expr ARROW expr               { mk_expr (LSE_arrow ($1, $3)) }
+  | expr WHEN const LPAR expr RPAR
+                                  { mk_expr (LSE_when ($1, $3, $5)) }
+  | MERGE IDENT matching+         { mk_expr (LSE_merge ($2, $3)) }
   | MINUS expr                    { mk_expr (LSE_unop (Op_uminus, $2)) }
   | NOT expr                      { mk_expr (LSE_unop (Op_not, $2)) }
   | PRE expr                      { mk_expr (LSE_pre $2) }
@@ -121,6 +124,9 @@ expr:
   | LPAR expr COMMA separated_nonempty_list(COMMA, expr) RPAR
                                   { mk_expr (LSE_tuple ($2::$4)) }
 ;
+
+matching: LPAR const ARROW expr RPAR
+                                  { $2, $4 }
 
 const:
   | BOOL_CONST                    { mk_expr (LSE_const (Cbool $1)) }

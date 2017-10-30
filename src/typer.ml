@@ -325,6 +325,9 @@ and type_expr_desc env loc = function
       TE_tuple tel,
       (List.map (fun e -> base_typ_of_ty e.texpr_loc e.texpr_type) tel)
 
+  | LSE_when(e, cond, clk) -> assert false
+  | LSE_merge(e, mat) -> assert false
+
 and type_args env loc params_ty el =
   let tel = List.map (type_expr env) el in
   let actual_types =

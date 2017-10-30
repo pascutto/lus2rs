@@ -28,6 +28,8 @@ and ls_expr_desc =
   | LSE_fby of ls_expr * ls_expr
   | LSE_pre of ls_expr
   | LSE_current of ls_expr
+  | LSE_merge of ident * (ls_expr * ls_expr) list
+  | LSE_when of ls_expr * ls_expr * ls_expr
   | LSE_tuple of ls_expr list
   | LSE_if of ls_expr * ls_expr * ls_expr
 
