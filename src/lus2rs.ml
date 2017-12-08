@@ -66,7 +66,7 @@ let () =
       Format.printf "/**************************************/@.";
       Format.printf "/*             Typed ast              */@.";
       Format.printf "/**************************************/@.";
-      Typed_ast_printer.print_node_list_std ft
+      Typed_ast_printer.print_node_list_std ft true
     end;
     if !type_only then exit 0;
 
@@ -75,7 +75,7 @@ let () =
       Format.printf "/**************************************/@.";
       Format.printf "/*           Normalized ast           */@.";
       Format.printf "/**************************************/@.";
-      Typed_ast_printer.print_node_list_std fn
+      Typed_ast_printer.print_node_list_std fn false
     end;
     if !norm_only then exit 0;
 
@@ -84,7 +84,7 @@ let () =
       Format.printf "/**************************************/@.";
       Format.printf "/*           Scheduled ast            */@.";
       Format.printf "/**************************************/@.";
-      Typed_ast_printer.print_node_list_std fs
+      Typed_ast_printer.print_node_list_std fs false
     end;
     if !schedule_only then exit 0;
 

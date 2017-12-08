@@ -4,10 +4,19 @@ open Format
 open Lustre_ast_types
 open Lustre_typed_ast
 
+let verbose = ref false
+
+let print_base_type fmt = function
+  | Tbool -> fprintf fmt "bool"
+  | Tint -> fprintf fmt "int"
+  | Treal -> fprintf fmt "real"
+
 let rec print_list f sep fmt = function
   | [] -> ()
   | [x] -> f fmt x
   | h :: t -> fprintf fmt "%a%s@ %a" f h sep (print_list f sep) t
+
+let print_type = print_list print_base_type ","
 
 let rec print_list_eol f sep fmt = function
   | [] -> ()
@@ -39,7 +48,13 @@ let print_unop fmt = function
   | Op_not -> fprintf fmt "not"
   | Op_uminus | Op_uminus_f -> fprintf fmt "-"
 
-let rec print_exp fmt e = match e.texpr_desc with
+let rec print_exp fmt e =
+  if !verbose
+  then
+    fprintf fmt "%a : %a" print_exp_desc e.texpr_desc print_type e.texpr_type
+  else fprintf fmt "%a" print_exp_desc e.texpr_desc
+
+and print_exp_desc fmt = function
   | TE_const c -> print_const fmt c
   | TE_ident x -> fprintf fmt "%a" Ident.print x
   | TE_binop (op, e1, e2) ->
@@ -90,11 +105,6 @@ let print_eq fmt eq =
     (print_list Ident.print ",") eq.teq_patt.tpatt_desc
     print_exp eq.teq_expr
 
-let print_base_type fmt = function
-  | Tbool -> fprintf fmt "bool"
-  | Tint -> fprintf fmt "int"
-  | Treal -> fprintf fmt "real"
-
 let print_var_dec fmt (name, ty) =
   fprintf fmt "%a : %a" Ident.print name print_base_type ty
 
@@ -109,5 +119,6 @@ let print_node fmt nd =
     print_var_dec_list nd.tn_local
     (print_list_eol print_eq ";") nd.tn_equs
 
-let print_node_list_std ndl =
+let print_node_list_std ndl v =
+  verbose := v;
   List.iter (fun nd -> Format.printf "%a@\n@." print_node nd) ndl
