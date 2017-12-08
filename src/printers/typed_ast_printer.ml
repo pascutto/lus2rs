@@ -1,3 +1,5 @@
+(* code d'Adrien Guatto *)
+
 open Format
 open Lustre_ast_types
 open Lustre_typed_ast
