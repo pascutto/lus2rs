@@ -1,5 +1,15 @@
+(*
+########
+Copyright © 2017
 
-(* Programme principal *)
+This file is part of lus2rs.
+lus2rs is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License v3 as published by
+the Free Software Foundation.
+
+Clément PASCUTTO <clement.pascutto@ens.fr
+########
+*)
 
 open Format
 open Lexing
@@ -12,6 +22,7 @@ let usage = "usage: "^Sys.argv.(0)^" [options] file.lus main"
 
 let parse_only = ref false
 let type_only = ref false
+let clock_only = ref false
 let schedule_only = ref false
 let norm_only = ref false
 let verbose = ref false
@@ -19,6 +30,7 @@ let verbose = ref false
 let spec =
   ["-parse-only", Arg.Set parse_only, "  stops after parsing";
    "-type-only", Arg.Set type_only, "  stops after typing";
+   "-clock-only", Arg.Set clock_only, "  stops after clocking";
    "-schedule-only", Arg.Set type_only, "  stops after scheduling";
    "-norm-only", Arg.Set norm_only, "  stops after normalization";
    "-verbose", Arg.Set verbose, "print intermediate transformations";
@@ -52,6 +64,7 @@ let () =
   let c = open_in file in
   let lb = Lexing.from_channel c in
   try
+    (* Parsing *)
     let f = Lustre_parser.file Lustre_lexer.token lb in
     close_in c;
     if !verbose then begin
@@ -61,7 +74,9 @@ let () =
       Ast_printer.print_program f
     end;
     if !parse_only then exit 0;
-    let ft = Typer.type_file f in
+
+    (* Typing *)
+    let ft = Typer.type_program f in
     if !verbose then begin
       Format.printf "/**************************************/@.";
       Format.printf "/*             Typed ast              */@.";
@@ -70,7 +85,18 @@ let () =
     end;
     if !type_only then exit 0;
 
-    let fn = Normalizer.normalize_file ft in
+    (* Clocking *)
+    let fc = Clocker.clock_program ft in
+    if !verbose then begin
+      Format.printf "/**************************************/@.";
+      Format.printf "/*            Clocked ast             */@.";
+      Format.printf "/**************************************/@.";
+      (* Clocked_ast_printer.print_program_v fc *)
+    end;
+    if !type_only then exit 0;
+    (*
+    (* Normalizing *)
+    let fn = Normalizer.normalize_file fc in
     if !verbose then begin
       Format.printf "/**************************************/@.";
       Format.printf "/*           Normalized ast           */@.";
@@ -79,6 +105,7 @@ let () =
     end;
     if !norm_only then exit 0;
 
+    (* Scheduling *)
     let fs = Scheduler.schedule fn in
     if !verbose then begin
       Format.printf "/**************************************/@.";
@@ -87,6 +114,7 @@ let () =
       Typed_ast_printer.print_program fs
     end;
     if !schedule_only then exit 0;
+    *)
 
   with
     | Lexing_error s ->

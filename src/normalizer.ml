@@ -1,3 +1,16 @@
+(*
+########
+Copyright © 2017
+
+This file is part of lus2rs.
+lus2rs is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License v3 as published by
+the Free Software Foundation.
+
+Clément PASCUTTO <clement.pascutto@ens.fr
+########
+*)
+
 open Lustre_typed_ast
 
 let new_local =

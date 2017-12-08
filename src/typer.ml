@@ -1,3 +1,16 @@
+(*
+########
+Copyright © 2017
+
+This file is part of lus2rs.
+lus2rs is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License v3 as published by
+the Free Software Foundation.
+
+Clément PASCUTTO <clement.pascutto@ens.fr
+########
+*)
+
 open Lustre_ast_types
 open Lustre_ast
 open Lustre_typed_ast
@@ -428,7 +441,7 @@ let type_node n =
   in
   let local =
     List.map
-      (fun (x, typ) -> let x', _, _ = Gamma.find  n.lsn_loc env x in (x', typ))
+      (fun (x, typ) -> let x', _, _ = Gamma.find n.lsn_loc env x in (x', typ))
       n.lsn_locals
   in
   let node =
@@ -441,4 +454,4 @@ let type_node n =
   in
   node
 
-let type_file f = List.map type_node f
+let type_program f = List.map type_node f
