@@ -25,28 +25,22 @@ let spec =
    "-v", Arg.Set verbose, "print intermediate transformations";
   ]
 
-let file, main_node =
+let file =
   let file = ref None in
-  let main = ref None in
   let set_file s =
     if not (Filename.check_suffix s ".lus") then
       raise (Arg.Bad "no .lus extension");
     file := Some s
-  in
-  let set_main s =
-    main := Some s
   in
   let cpt = ref 0 in
   let set s =
     incr cpt;
     match !cpt with
     | 1 -> set_file s
-    | 2 -> set_main s
     | _ -> raise (Arg.Bad "Too many arguments")
   in
   Arg.parse spec set usage;
-  (match !file with Some f -> f | None -> Arg.usage spec usage; exit 1),
-  (match !main with Some n -> n | None -> Arg.usage spec usage; exit 1)
+  (match !file with Some f -> f | None -> Arg.usage spec usage; exit 1)
 
 let report_loc (b,e) =
   let l = b.pos_lnum in
@@ -60,8 +54,14 @@ let () =
   try
     let f = Lustre_parser.file Lustre_lexer.token lb in
     close_in c;
+    if !verbose then begin
+      Format.printf "/**************************************/@.";
+      Format.printf "/*            Parsed ast              */@.";
+      Format.printf "/**************************************/@.";
+      Ast_printer.print_node_list_std f
+    end;
     if !parse_only then exit 0;
-    let ft = Typer.type_file f main_node in
+    let ft = Typer.type_file f in
     if !verbose then begin
       Format.printf "/**************************************/@.";
       Format.printf "/*             Typed ast              */@.";

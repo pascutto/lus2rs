@@ -441,18 +441,4 @@ let type_node n =
   in
   node
 
-let check_main ft main =
-  let (_, typ), is_prim =
-    try Delta.find main with Not_found -> error dummy_loc (UnboundNode main)
-  in
-  match typ, is_prim with
-  | (_, [Tbool]), false -> ()
-  | (t_in, t_out), false ->
-      let n = List.find (fun n -> n.tn_name.Ident.name = main) (List.rev ft) in
-      error n.tn_loc (BadMain (t_in, t_out))
-  | _ -> errors dummy_loc "The main node cannot be a primitive function"
-
-let type_file f main =
-  let ft = List.map type_node f in
-  if main <> "" then check_main ft main;
-  ft
+let type_file f = List.map type_node f
