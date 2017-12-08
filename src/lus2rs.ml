@@ -91,10 +91,10 @@ let () =
       Format.printf "/**************************************/@.";
       Format.printf "/*            Clocked ast             */@.";
       Format.printf "/**************************************/@.";
-      (* Clocked_ast_printer.print_program_v fc *)
+      Clocked_ast_printer.print_program_v fc
     end;
     if !type_only then exit 0;
-    (*
+(*
     (* Normalizing *)
     let fn = Normalizer.normalize_file fc in
     if !verbose then begin
@@ -114,8 +114,7 @@ let () =
       Typed_ast_printer.print_program fs
     end;
     if !schedule_only then exit 0;
-    *)
-
+*)
   with
     | Lexing_error s ->
     	report_loc (lexeme_start_p lb, lexeme_end_p lb);

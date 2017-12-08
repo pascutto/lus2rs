@@ -1,4 +1,4 @@
-CMO=lustre_lexer.cmo lustre_parser.cmo ident.cmo ast_printer.cmo typed_ast_printer.cmo typer.cmo normalizer.cmo scheduler.cmo lus2rs.cmo
+CMO=lustre_lexer.cmo lustre_parser.cmo ident.cmo ast_printer.cmo typer.cmo typed_ast_printer.cmo clocker.cmo clocked_ast_printer.cmo normalizer.cmo scheduler.cmo lus2rs.cmo
 GENERATED = lustre_lexer.ml lustre_parser.ml lustre_parser.mli
 BIN=lus2rs
 FLAGS=
@@ -30,6 +30,8 @@ clean:
 lustre_parser.ml: lustre_ast_types.cmi lustre_ast.cmi
 
 typer.ml: lustre_typed_ast.cmi
+
+clocker.ml: lustre_clocked_ast.cmi
 
 .depend depend: $(GENERATED)
 	rm -f .depend
