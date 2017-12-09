@@ -94,17 +94,17 @@ let () =
       Clocked_ast_printer.print_program_v fc
     end;
     if !type_only then exit 0;
-(*
+
     (* Normalizing *)
     let fn = Normalizer.normalize_file fc in
     if !verbose then begin
       Format.printf "/**************************************/@.";
       Format.printf "/*           Normalized ast           */@.";
       Format.printf "/**************************************/@.";
-      Typed_ast_printer.print_program fn
+      Clocked_ast_printer.print_program fn
     end;
     if !norm_only then exit 0;
-
+    (*
     (* Scheduling *)
     let fs = Scheduler.schedule fn in
     if !verbose then begin
