@@ -104,17 +104,17 @@ let () =
       Clocked_ast_printer.print_program fn
     end;
     if !norm_only then exit 0;
-    (*
+
     (* Scheduling *)
     let fs = Scheduler.schedule fn in
     if !verbose then begin
       Format.printf "/**************************************/@.";
       Format.printf "/*           Scheduled ast            */@.";
       Format.printf "/**************************************/@.";
-      Typed_ast_printer.print_program fs
+      Clocked_ast_printer.print_program fs
     end;
     if !schedule_only then exit 0;
-*)
+
   with
     | Lexing_error s ->
     	report_loc (lexeme_start_p lb, lexeme_end_p lb);

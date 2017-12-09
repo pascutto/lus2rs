@@ -12,57 +12,57 @@ Clément PASCUTTO <clement.pascutto@ens.fr
 *)
 
 open Lustre_ast_types
-open Lustre_typed_ast
+open Lustre_clocked_ast
 
 exception Causality of location
 
 module S = Set.Make(Ident)
 module Graph = Set.Make(
   struct
-    type t = Ident.t * S.t * t_equation
-    let compare (x1,s1,_) (x2,s2,_) =
+    type t = Ident.t * S.t * c_equation
+    let compare (x1, s1, _) (x2, s2, _) =
       let c = Ident.compare x1 x2 in
-      if c<>0 then c else S.compare s1 s2
+      if c <> 0 then c else S.compare s1 s2
   end)
 
-let add_vars_of_patt s {tpatt_desc=p} =
+let add_vars_of_patt s {cpatt_desc = p} =
   List.fold_left (fun s x -> S.add x s) s p
 
-let rec add_vars_of_exp s {texpr_desc=e} =
+let rec add_vars_of_exp s {cexpr_desc = e} =
   match e with
-  | TE_const _ -> s
-  | TE_ident x -> S.add x s
-  | TE_arrow (e1, e2) -> add_vars_of_exp (add_vars_of_exp s e1) e2
-  | TE_fby (e1, e2) -> add_vars_of_exp s e1
-  | TE_pre e -> s
-  | TE_current e -> add_vars_of_exp s e
-  | TE_binop (_, e1, e2) -> add_vars_of_exp (add_vars_of_exp s e1) e2
-  | TE_unop (_, e) -> add_vars_of_exp s e
-  | TE_app (_,l) -> List.fold_left add_vars_of_exp s l
-  | TE_prim (_,l) -> List.fold_left add_vars_of_exp s l
-  | TE_tuple l -> List.fold_left add_vars_of_exp s l
-  | TE_merge (id, mat) ->
+  | CE_const _ -> s
+  | CE_ident x -> S.add x s
+  | CE_arrow (e1, e2) -> add_vars_of_exp (add_vars_of_exp s e1) e2
+  | CE_fby (e1, e2) -> add_vars_of_exp s e1
+  | CE_pre e -> s
+  | CE_current e -> add_vars_of_exp s e
+  | CE_binop (_, e1, e2) -> add_vars_of_exp (add_vars_of_exp s e1) e2
+  | CE_unop (_, e) -> add_vars_of_exp s e
+  | CE_app (_,l) -> List.fold_left add_vars_of_exp s l
+  | CE_prim (_,l) -> List.fold_left add_vars_of_exp s l
+  | CE_tuple l -> List.fold_left add_vars_of_exp s l
+  | CE_merge (id, mat) ->
     List.fold_left add_vars_of_exp (S.add id s) (List.map snd mat)
-  | TE_when (e, cond, clk) -> add_vars_of_exp (add_vars_of_exp s e) clk
-  | TE_if (e1, e2, e3) ->
+  | CE_when (e, cond, clk) -> add_vars_of_exp (add_vars_of_exp s e) clk
+  | CE_if (e1, e2, e3) ->
     add_vars_of_exp (add_vars_of_exp (add_vars_of_exp s e1) e2) e3
 
 let schedule_equs nloc inputs equs =
   let g =
     List.fold_left
       (fun g eq ->
-	 let vp = add_vars_of_patt S.empty eq.teq_patt in
-	 let ve = add_vars_of_exp S.empty eq.teq_expr in
-	 S.fold (fun x g -> Graph.add (x,ve,eq) g) vp g)
+      	let vp = add_vars_of_patt S.empty eq.ceq_patt in
+      	let ve = add_vars_of_exp S.empty eq.ceq_expr in
+      	S.fold (fun x g -> Graph.add (x, ve, eq) g) vp g)
       Graph.empty equs
   in
   (* Suppression des dépendances aux entrées. *)
   let g =
     let s_inputs =
-      List.fold_left (fun acc (x, _) -> S.add x acc) S.empty inputs
+      List.fold_left (fun acc (x, _, _) -> S.add x acc) S.empty inputs
     in
     Graph.fold
-      (fun (y,s,e) g -> Graph.add (y,S.diff s s_inputs,e) g)
+      (fun (y,s,e) g -> Graph.add (y, S.diff s s_inputs, e) g)
       g
       Graph.empty
   in
@@ -90,8 +90,8 @@ let schedule_equs nloc inputs equs =
   exists_loop [] g
 
 let schedule_node n =
-  let equs = schedule_equs n.tn_loc n.tn_input n.tn_equs in
-  { n with tn_equs = equs; }
+  let equs = schedule_equs n.cn_loc n.cn_input n.cn_equs in
+  { n with cn_equs = equs; }
 
 let schedule =
   List.map schedule_node
