@@ -139,6 +139,7 @@ let print_node fmt nd =
     (print_list_eol print_eq ";") nd.cn_equs
 
 let print_program ndl =
+  verbose := false;
   List.iter (fun nd -> Format.printf "%a@\n@." print_node nd) ndl
 
 let print_program_v ndl =
