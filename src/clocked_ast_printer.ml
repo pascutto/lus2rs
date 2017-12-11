@@ -27,7 +27,6 @@ let print_base_type fmt = function
   | Tint -> fprintf fmt "int"
   | Treal -> fprintf fmt "real"
 
-
 let print_base_clock fmt = function
   | Base -> fprintf fmt "base"
   | Clk (id, c) -> fprintf fmt "%a(@[%a@])" Ident.print id print_const c
@@ -67,7 +66,7 @@ let print_unop fmt = function
 let rec print_exp fmt e =
   if !verbose
   then
-    fprintf fmt "%a : %a" print_exp_desc e.cexpr_desc print_clock e.cexpr_clock
+    fprintf fmt "%a :: %a" print_exp_desc e.cexpr_desc print_clock e.cexpr_clock
   else fprintf fmt "%a" print_exp_desc e.cexpr_desc
 
 and print_exp_desc fmt = function
@@ -124,8 +123,12 @@ let print_eq fmt eq =
     print_exp eq.ceq_expr
 
 let print_var_dec fmt (name, ty, clk) =
-  fprintf fmt "%a : %a : %a"
-    Ident.print name print_base_type ty print_base_clock clk
+  if !verbose then
+    fprintf fmt "%a : %a :: %a"
+      Ident.print name print_base_type ty print_base_clock clk
+  else
+    fprintf fmt "%a : %a"
+      Ident.print name print_base_type ty
 
 let rec print_var_dec_list = print_list print_var_dec ";"
 
@@ -144,4 +147,4 @@ let print_program ndl =
 
 let print_program_v ndl =
   verbose := true;
-  print_program ndl
+  List.iter (fun nd -> Format.printf "%a@\n@." print_node nd) ndl

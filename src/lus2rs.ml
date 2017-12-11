@@ -93,7 +93,7 @@ let () =
       Format.printf "/**************************************/@.";
       Clocked_ast_printer.print_program_v fc
     end;
-    if !type_only then exit 0;
+    if !clock_only then exit 0;
 
     (* Normalizing *)
     let fn = Normalizer.normalize_file fc in
@@ -118,19 +118,23 @@ let () =
   with
     | Lexing_error s ->
     	report_loc (lexeme_start_p lb, lexeme_end_p lb);
-    	eprintf "lexical error: %s\n@." s;
+    	eprintf "Lexical error: %s\n@." s;
     	exit 1
     | Lustre_parser.Error ->
     	report_loc (lexeme_start_p lb, lexeme_end_p lb);
-    	eprintf "syntax error\n@.";
+    	eprintf "Syntax error\n@.";
     	exit 1
     | Typer.Error(l,e) ->
     	report_loc l;
-    	eprintf "%a\n@." Typer.report e;
+    	eprintf "Type error: %a\n@." Typer.report e;
      exit 1
+    | Clocker.Error(l,e) ->
+      report_loc l;
+      eprintf "Clock error: %a\n@." Clocker.report e;
+    exit 1
     | Scheduler.Causality(l) ->
       report_loc l;
-      eprintf "node not schedulable\n@.";
+      eprintf "Node not schedulable\n@.";
       exit 1
     | e ->
         eprintf "Anomaly: %s\n@." (Printexc.to_string e);

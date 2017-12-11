@@ -28,6 +28,13 @@ let dummy_loc = Lexing.dummy_pos, Lexing.dummy_pos
 
 let error loc e = raise (Error (loc, e))
 
+let str = function
+  | [x] -> begin match x with
+      | Base -> print_string "_base_"
+      | Clk(id, cons) -> print_string "comp"
+    end
+  | _ -> ()
+
 let print_const fmt = function
   | Cbool b -> fprintf fmt "%b" b
   | Cint i -> fprintf fmt "%d" i
@@ -49,11 +56,11 @@ let print_clock fmt = function
 let report fmt = function
   | ExpectedClock (c1, c2) ->
     fprintf fmt
-    "this expression has clock %a but is expected to have clock %a"
+    "This expression has clock %a but is expected to have clock %a"
     print_clock c1 print_clock c2
   | ExpectedBase clk ->
     fprintf fmt
-      "this expression has clock %a but is expected to have a type simple clock"
+      "This expression has clock %a but is expected to have a type simple clock"
       print_clock clk
 
 module Delta = struct
@@ -102,7 +109,8 @@ let base_clock_of_clock loc = function
 let compatible_base actual_clk expected_clk=
   actual_clk = expected_clk
 
-let compatible actual_clk expected_clk =
+let compatible actual_clk expected_clk = actual_clk = expected_clk
+  (*
   try
     List.fold_left2
       (fun well_c ac_c ex_c ->
@@ -110,6 +118,7 @@ let compatible actual_clk expected_clk =
          (well_c && well_c'))
       true actual_clk expected_clk
   with Invalid_argument _ -> false
+*)
 
 let rec is_constant env e =
   match e.texpr_desc with
@@ -136,10 +145,12 @@ let rec clock_expr env e =
 and clock_expr_desc env loc = function
   | TE_const c -> CE_const c , [Base]
 
-  | TE_ident x ->
-    let x, clk, _ = Gamma.find loc env x in
-    CE_ident x , [clk]
-
+  | TE_ident x -> begin
+    try
+      let x, clk, _ = Gamma.find loc env x in
+      CE_ident x , [clk]
+    with _ -> print_string (Ident.string_of x); print_newline(); assert false
+  end
   | TE_unop (op, e) ->
     let ce = clock_expr env e in
     CE_unop(op, ce) , ce.cexpr_clock
@@ -149,20 +160,22 @@ and clock_expr_desc env loc = function
     let clk1 = ce1.cexpr_clock in
     let ce2 = clock_expr env e2 in
     let clk2 = ce2.cexpr_clock in
-    begin match clk1, clk2 with
-      | [c1], [c2] when c1 = c2 -> CE_binop (op, ce1, ce2), clk1
-      | _ -> assert false (* TODO Raise error *)
-    end
+    if clk1 = clk2
+      then CE_binop (op, ce1, ce2), clk1
+      else error loc (ExpectedClock(clk2, clk1))
 
   | TE_if (e1, e2, e3) ->
     let ce1 = clock_expr env e1 in
+    let clk1 = ce1.cexpr_clock in
     let ce2 = clock_expr env e2 in
+    let clk2 = ce2.cexpr_clock in
     let ce3 = clock_expr env e3 in
-    if ce1.cexpr_clock = ce2.cexpr_clock && ce2.cexpr_clock = ce3.cexpr_clock
-    then
-      let clk = ce2.cexpr_clock in
-      CE_if(ce1, ce2, ce3), clk
-    else assert false  (* TODO raise error *)
+    let clk3 = ce3.cexpr_clock in
+    if not (compatible clk1 clk2)
+    then error loc (ExpectedClock(clk2, clk1))
+    else if not (compatible clk2 clk3)
+    then (print_string "err2"; error loc (ExpectedClock(clk3, clk2)))
+    else CE_if(ce1, ce2, ce3), clk1
 
   | TE_app (f, el) -> assert false (* TODO *)
 
@@ -188,7 +201,7 @@ and clock_expr_desc env loc = function
   | TE_merge(e, mat) -> assert false (* TODO *)
   | _ -> assert false
 
-and type_args env loc params_clk el =
+and clock_args env loc params_clk el =
   let cel = List.map (clock_expr env) el in
   let actual_clocks =
     List.rev
@@ -211,7 +224,7 @@ and expected_clock env e clk =
   if cec = clk then ce
   else error e.texpr_loc (ExpectedClock (cec, clk))
 
-and expected_base_typpe env e =
+and expected_base_clock env e =
   let ce = clock_expr env e in
   match ce.cexpr_clock with
   | [_] -> ce
@@ -237,6 +250,7 @@ and clock_patt_desc env loc patt =
 let clock_equation env eq =
   let patt = clock_patt env eq.teq_patt in
   let expr = clock_expr env eq.teq_expr in
+  print_string "expr\n";
   let well_clocked = compatible expr.cexpr_clock patt.cpatt_clock in
   if well_clocked then
     { ceq_patt = patt; ceq_expr = expr; }
@@ -251,28 +265,29 @@ let add_vars_of_patt loc s {ceq_patt = {cpatt_desc = p}} =
 let clock_node n =
   let out_clk = List.map (fun (x, typ) -> (x, Base)) n.tn_output in
   let loc_clk = List.map (fun (x, typ) -> (x, Base)) n.tn_local in
-  let in_clk = List.map (fun (x, typ) -> (x, Base)) n.tn_local in
+  let in_clk = List.map (fun (x, typ) -> (x, Base)) n.tn_input in
   let env = Gamma.adds n.tn_loc Vpatt Gamma.empty (out_clk@loc_clk) in
   let env = Gamma.adds n.tn_loc Vinput env in_clk in
   let equs = List.map (clock_equation env) n.tn_equs in
-  let t_in = List.map (fun (_, clk) -> clk) n.tn_input in
-  let t_out = List.map (fun (_, clk) -> clk) n.tn_output in
-  let name = Delta.add n.tn_name (t_in,t_out) in
+  print_string "equs\n";
   let input =
     List.map
-      (fun (x, typ) -> let x', _, _ = Gamma.find n.tn_loc env x in (x', typ, Base))
+      (fun (x, typ) -> let x', clk, _ = Gamma.find n.tn_loc env x in (x', typ, clk))
       n.tn_input
   in
   let output =
     List.map
-      (fun (x, typ) -> let x', _, _ = Gamma.find n.tn_loc env x in (x', typ, Base))
+      (fun (x, typ) -> let x', clk, _ = Gamma.find n.tn_loc env x in (x', typ, clk))
       n.tn_output
   in
   let local =
     List.map
-      (fun (x, typ) -> let x', _, _ = Gamma.find n.tn_loc env x in (x', typ, Base))
+      (fun (x, typ) -> let x', clk, _ = Gamma.find n.tn_loc env x in (x', typ, clk))
       n.tn_local
   in
+  let c_in = List.map (fun (_, _, clk) -> clk ) input in
+  let c_out = List.map (fun (_, _, clk) -> clk) output in
+  let name = Delta.add n.tn_name (c_in, c_out) in
   let node =
     { cn_name = name;
       cn_input = input;
