@@ -1,10 +1,11 @@
-node test() returns(o1, o2: bool);
-let
-  o1, o2 = f();
-tel;
-
 node f() returns (o1, o2: bool);
 let
   o1 = true;
   o2 = false;
+tel;
+
+
+node test() returns(o1, o2: bool);
+let
+  o1, o2 = f();
 tel;

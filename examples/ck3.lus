@@ -1,3 +1,9 @@
+node ck3_clk (a: bool; b: bool when a; c: bool when b)
+returns (x: bool);
+let
+  x = current(current(c));
+tel
+
 node ck3 (a: bool; b: bool; c: bool)
 returns (x: bool);
 var
@@ -5,11 +11,4 @@ var
 let
   b_on_a = b when a;
   x = ck3_clk(a,b when a, c when b_on_a);
-tel
-
-
-node ck3_clk (a: bool; b: bool when a; c: bool when b)
-returns (x: bool);
-let
-  x = current(current(c));
 tel

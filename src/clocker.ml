@@ -28,13 +28,6 @@ let dummy_loc = Lexing.dummy_pos, Lexing.dummy_pos
 
 let error loc e = raise (Error (loc, e))
 
-let str = function
-  | [x] -> begin match x with
-      | Base -> print_string "_base_"
-      | Clk(id, cons) -> print_string "comp"
-    end
-  | _ -> ()
-
 let print_const fmt = function
   | Cbool b -> fprintf fmt "%b" b
   | Cint i -> fprintf fmt "%d" i
@@ -152,7 +145,7 @@ and clock_expr_desc env loc = function
     try
       let x, clk, _ = Gamma.find loc env x in
       CE_ident x , [clk]
-    with _ -> print_string (Ident.string_of x); print_newline(); assert false
+    with _ -> assert false
   end
   | TE_unop (op, e) ->
     let ce = clock_expr env e in
@@ -177,7 +170,7 @@ and clock_expr_desc env loc = function
     if not (compatible clk1 clk2)
     then error loc (ExpectedClock(clk2, clk1))
     else if not (compatible clk2 clk3)
-    then (print_string "err2"; error loc (ExpectedClock(clk3, clk2)))
+    then error loc (ExpectedClock(clk3, clk2))
     else CE_if(ce1, ce2, ce3), clk1
 
   | TE_app (f, el) -> assert false (* TODO *)
@@ -253,7 +246,6 @@ and clock_patt_desc env loc patt =
 let clock_equation env eq =
   let patt = clock_patt env eq.teq_patt in
   let expr = clock_expr env eq.teq_expr in
-  print_string "expr\n";
   let well_clocked = compatible expr.cexpr_clock patt.cpatt_clock in
   if well_clocked then
     { ceq_patt = patt; ceq_expr = expr; }

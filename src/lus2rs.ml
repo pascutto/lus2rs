@@ -142,5 +142,5 @@ let () =
       eprintf "Node not schedulable\n@.";
       exit 1
     | e ->
-        eprintf "Anomaly: %s\n@." (Printexc.to_string e);
-        exit 2
+      eprintf "Anomaly: %s\n@." (Printexc.to_string e);
+      exit 2

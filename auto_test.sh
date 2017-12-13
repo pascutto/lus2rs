@@ -85,7 +85,7 @@ part3 () {
   for f in examples/*.lus; do
     echo -n ".";
     max=`expr $max + 1`;
-    compile --type-only $f;
+    compile --clock-only $f;
     case $? in
   	"1")
     	echo

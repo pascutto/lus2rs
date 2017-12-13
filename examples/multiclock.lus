@@ -1,8 +1,8 @@
-node multiclock ( x, y: int; c: bool; z: int )
-        returns ( s: int);
-
+node moyenne( x, y: int ) returns ( m: int );
+var s: int;
 let
-  s = current(multiclock_clk ( x, y, c, z when c ));
+  m = s / 2 ;
+  s = x + y ;
 tel
 
 node multiclock_clk ( x, y: int; c: bool; z: int when c )
@@ -15,9 +15,9 @@ let
   s = current u ;
 tel
 
-node moyenne( x, y: int ) returns ( m: int );
-var s: int;
+node multiclock ( x, y: int; c: bool; z: int )
+        returns ( s: int);
+
 let
-  m = s / 2 ;
-  s = x + y ;
+  s = current(multiclock_clk ( x, y, c, z when c ));
 tel

@@ -1,3 +1,25 @@
+node PCOND_clk(
+           h0:bool;
+           hA,hB,hC:bool when h0;
+           A:int when hA;
+           B:int when hB;
+           C:bool when hC;
+           hD:bool when hC;
+           D:bool when hD)
+returns (hX:bool when h0; X:int when hX);
+let
+  hX = hC and current(hD) and ( ( hA and
+                                 current(current(D)) )
+                               or
+                               ( hB and not
+                                current(current(D)) ) );
+
+  X = ( if ( hA and current(current(D)) )
+        then current(A)
+        else current(B)
+       ) when hX;
+tel
+
 node PCOND(
            h0:bool;
            hA,hB,hC:bool;
@@ -29,26 +51,4 @@ let
            C when hC_when_h0,
            hD when hC_when_h0,
            D when hD_when_hC_when_h0);
-tel
-
-node PCOND_clk(
-           h0:bool;
-           hA,hB,hC:bool when h0;
-           A:int when hA;
-           B:int when hB;
-           C:bool when hC;
-           hD:bool when hC;
-           D:bool when hD)
-returns (hX:bool when h0; X:int when hX);
-let
-  hX = hC and current(hD) and ( ( hA and
-                                 current(current(D)) )
-                               or
-                               ( hB and not
-                                current(current(D)) ) );
-
-  X = ( if ( hA and current(current(D)) )
-        then current(A)
-        else current(B)
-       ) when hX;
 tel
