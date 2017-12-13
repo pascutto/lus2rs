@@ -22,14 +22,17 @@ let print_const fmt = function
   | Cint i -> fprintf fmt "%d" i
   | Creal f -> fprintf fmt "%f" f
 
-let print_base_type fmt = function
+let rec print_base_type fmt = function
   | Tbool -> fprintf fmt "bool"
   | Tint -> fprintf fmt "int"
   | Treal -> fprintf fmt "real"
 
-let print_base_clock fmt = function
+and print_base_clock fmt = function
   | Base -> fprintf fmt "base"
-  | Clk (id, c) -> fprintf fmt "%a(@[%a@])" Ident.print id print_const c
+  | Clk (id, cond) -> begin match cond.cexpr_desc with
+      | CE_const(c) -> fprintf fmt "%a(@[%a@])" print_const c Ident.print id
+      | _ -> assert false
+    end
 
 let rec print_list f sep fmt = function
   | [] -> ()
@@ -122,13 +125,13 @@ let print_eq fmt eq =
     (print_list Ident.print ",") eq.ceq_patt.cpatt_desc
     print_exp eq.ceq_expr
 
-let print_var_dec fmt (name, ty, clk) =
-  if !verbose then
-    fprintf fmt "%a : %a :: %a"
-      Ident.print name print_base_type ty print_base_clock clk
-  else
-    fprintf fmt "%a : %a"
-      Ident.print name print_base_type ty
+let print_var_dec fmt (name, ty, clk) = match clk with
+  | Base -> fprintf fmt "%a : %a" Ident.print name print_base_type ty
+  | Clk(cond, e) -> fprintf fmt "%a : %a when %a(%a)"
+                       Ident.print name
+                       print_base_type ty
+                       Ident.print cond
+                       print_exp e
 
 let rec print_var_dec_list = print_list print_var_dec ";"
 

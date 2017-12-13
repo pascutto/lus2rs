@@ -104,7 +104,7 @@ module Delta = struct
   let is_primitive f = List.mem_assoc f prims
 
   let find n =
-    try Hashtbl.find nodes n , false with
+    try Hashtbl.find nodes n, false with
 	Not_found -> List.assoc n prims , true
 
   let add x t =
@@ -112,7 +112,7 @@ module Delta = struct
     Hashtbl.replace nodes x (x', t);
     x'
 
-  let save () = Hashtbl.fold (fun key (_,typ) env -> (key,typ)::env) nodes []
+  let save () = Hashtbl.fold (fun key (_, typ) env -> (key,typ)::env) nodes []
 end
 
 type io = Vinput | Vpatt
@@ -125,10 +125,10 @@ module Gamma = struct
   let add loc env x t io =
     if M.mem x env then error loc (Clash x);
     let x' = Ident.make x Ident.Stream in
-    M.add x (x',t,io) env
+    M.add x (x', t, io) env
 
   let adds loc io =
-    List.fold_left (fun env (x,t) -> add loc env x t io)
+    List.fold_left (fun env (x, t, c) -> add loc env x t io)
 
   let find loc env x = try
     M.find x env
@@ -333,13 +333,26 @@ and type_expr_desc env loc = function
       TE_current te, te.texpr_type
 
   | LSE_tuple el as n ->
-      not_a_nested_tuple n loc;
-      let tel = List.map (type_expr env) el in
-      TE_tuple tel,
-      (List.map (fun e -> base_typ_of_ty e.texpr_loc e.texpr_type) tel)
+    not_a_nested_tuple n loc;
+    let tel = List.map (type_expr env) el in
+    TE_tuple tel,
+    (List.map (fun e -> base_typ_of_ty e.texpr_loc e.texpr_type) tel)
 
-  | LSE_when(e, cond, clk) -> assert false
-  | LSE_merge(e, mat) -> assert false
+  | LSE_when(e, cond, clk) ->
+    let tecond, idclk = type_when env cond clk in
+    let te = type_expr env e in
+    let ty = te.texpr_type in
+    TE_when (te, tecond, idclk), ty
+
+  | LSE_merge(e, mat) -> assert false (* TODO *)
+
+and type_when env cond clk =
+  let tecond = type_expr env cond in
+  let tycond = tecond.texpr_type in
+  let idclk, tyclk, _ = Gamma.find tecond.texpr_loc env clk in
+  if compatible tycond [tyclk] then (tecond, idclk)
+  else error tecond.texpr_loc (ExpectedType (tycond, [tyclk]))
+
 
 and type_args env loc params_ty el =
   let tel = List.map (type_expr env) el in
@@ -426,23 +439,26 @@ let type_node n =
   let env = Gamma.adds n.lsn_loc Vinput env n.lsn_inputs in
   let equs = List.map (type_equation env) n.lsn_eqs in
   check_outputs n.lsn_loc env equs;
-  let t_in = List.map (fun (_, typ) -> typ) n.lsn_inputs in
-  let t_out = List.map (fun (_, typ) -> typ) n.lsn_outputs in
+  let t_in = List.map (fun (_, typ, clk) -> typ) n.lsn_inputs in
+  let t_out = List.map (fun (_, typ, clk) -> typ) n.lsn_outputs in
   let name = Delta.add n.lsn_name (t_in,t_out) in
+  let type_decl = fun (x, typ, clk ) ->
+      let x', _, _ = Gamma.find n.lsn_loc env x in
+      let tclk = match clk with
+        | PBase -> TBase
+        | PClk(clk, cond) -> begin
+            let tecond, teclk = type_when env cond clk in
+            TClk(teclk, tecond)
+          end in
+      (x', typ, tclk) in
   let input =
-    List.map
-      (fun (x, typ) -> let x', _, _ = Gamma.find n.lsn_loc env x in (x', typ))
-      n.lsn_inputs
+    List.map type_decl n.lsn_inputs
   in
   let output =
-    List.map
-      (fun (x, typ) -> let x', _, _ = Gamma.find n.lsn_loc env x in (x', typ))
-      n.lsn_outputs
+    List.map type_decl n.lsn_outputs
   in
   let local =
-    List.map
-      (fun (x, typ) -> let x', _, _ = Gamma.find n.lsn_loc env x in (x', typ))
-      n.lsn_locals
+    List.map type_decl n.lsn_locals
   in
   let node =
     { tn_name = name;

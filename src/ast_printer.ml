@@ -74,7 +74,7 @@ let rec print_exp fmt e = match e.pexpr_desc with
       fprintf fmt "pre (@[%a@])" print_exp e
   | LSE_current e ->
     fprintf fmt "current (@[%a@])" print_exp e
-  | LSE_when (e, cond, clk) -> fprintf fmt "@[(@[%a@]) when @[%a@](@[%a@])@]" print_exp e print_exp cond print_exp clk
+  | LSE_when (e, cond, clk) -> fprintf fmt "@[(@[%a@]) when @[%a@](@[%s@])@]" print_exp e print_exp cond clk
   | LSE_merge(clk,le) ->
     fprintf fmt "merge @[%s@] @[%a@]" clk print_matching le
   | LSE_tuple e_list ->
@@ -110,8 +110,13 @@ let print_base_type fmt = function
   | Tint -> fprintf fmt "int"
   | Treal -> fprintf fmt "real"
 
-let print_var_dec fmt (name, ty) =
-  fprintf fmt "%s : %a" name print_base_type ty
+let print_var_dec fmt (name, ty, clk) =
+  match clk with
+  | PBase -> fprintf fmt "%s : %a" name print_base_type ty
+  | PClk(cond, e) -> fprintf fmt "%s : %a when %a(%s)" name
+                       print_base_type ty
+                       print_exp e
+                       cond
 
 let print_var_dec_list = print_list print_var_dec ";"
 

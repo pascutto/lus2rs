@@ -13,9 +13,13 @@ Clément PASCUTTO <clement.pascutto@ens.fr
 
 open Lustre_ast_types
 
-type typed_var = Ident.t * base_typ
+type tclock =
+  | TBase
+  | TClk of Ident.t * t_expr
 
-type t_expr = {
+and decl_var = Ident.t * base_typ * tclock
+
+and t_expr = {
   texpr_desc: t_expr_desc;
   texpr_type: typ;
   texpr_loc: location;
@@ -34,7 +38,7 @@ and t_expr_desc =
   | TE_pre of t_expr
   | TE_current of t_expr
   | TE_merge of Ident.t * (t_expr * t_expr) list
-  | TE_when of t_expr * t_expr * t_expr
+  | TE_when of t_expr * t_expr * Ident.t
   | TE_tuple of t_expr list
 
 type t_patt = {
@@ -50,9 +54,9 @@ type t_equation = {
 
 type t_node = {
   tn_name: Ident.t;
-  tn_input: typed_var list;
-  tn_output: typed_var list;
-  tn_local: typed_var list;
+  tn_input: decl_var list;
+  tn_output: decl_var list;
+  tn_local: decl_var list;
   tn_equs: t_equation list;
   tn_loc: location;
 }

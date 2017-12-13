@@ -13,7 +13,11 @@ Clément PASCUTTO <clement.pascutto@ens.fr
 
 open Lustre_ast_types
 
-type ls_expr = {
+type pclock =
+  | PBase
+  | PClk of ident * ls_expr
+
+and ls_expr = {
   pexpr_desc: ls_expr_desc;
   pexpr_loc: location;
 }
@@ -29,7 +33,7 @@ and ls_expr_desc =
   | LSE_pre of ls_expr
   | LSE_current of ls_expr
   | LSE_merge of ident * (ls_expr * ls_expr) list
-  | LSE_when of ls_expr * ls_expr * ls_expr
+  | LSE_when of ls_expr * ls_expr * ident
   | LSE_tuple of ls_expr list
   | LSE_if of ls_expr * ls_expr * ls_expr
 
@@ -47,12 +51,13 @@ and ls_equation = {
   lseq_expr: ls_expr;
 }
 
-and ls_node =
-    { lsn_name: ident;
-      lsn_inputs: (ident * base_typ) list;
-      lsn_outputs: (ident * base_typ) list;
-      lsn_locals: (ident * base_typ) list;
-      lsn_eqs: ls_equation list;
-      lsn_loc: location; }
+and ls_node = {
+  lsn_name: ident;
+  lsn_inputs: (ident * base_typ * pclock) list;
+  lsn_outputs: (ident * base_typ * pclock) list;
+  lsn_locals: (ident * base_typ * pclock) list;
+  lsn_eqs: ls_equation list;
+  lsn_loc: location;
+}
 
 and ls_file = ls_node list

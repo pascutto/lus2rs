@@ -42,7 +42,10 @@ let print_const fmt = function
 
 let print_base_clock fmt = function
   | Base -> fprintf fmt "_base_"
-  | Clk(id, cons) -> fprintf fmt "%a(@[%a@])" Ident.print id print_const cons
+  | Clk(id, cons) -> begin match cons.cexpr_desc with
+    | CE_const(c) -> fprintf fmt "%a(@[%a@])" Ident.print id print_const c
+    | _ -> assert false
+    end
 
 let print_clock fmt = function
   | ([]) -> fprintf fmt "empty tuple"
@@ -262,27 +265,41 @@ let add_vars_of_patt loc s {ceq_patt = {cpatt_desc = p}} =
   let add x s = S.add x s in
   List.fold_left (fun s x -> add x s) s p
 
+let tclk_to_clk = function
+  | TBase -> Base
+  | TClk(clk, cond) -> begin match cond.texpr_desc with
+      | TE_const(c) -> let cond = {
+          cexpr_desc = CE_const(c);
+          cexpr_type = cond.texpr_type;
+          cexpr_clock = [Base];
+          cexpr_loc = cond.texpr_loc;
+        } in
+        Clk(clk, cond)
+      | _ -> assert false
+  end
+
 let clock_node n =
-  let out_clk = List.map (fun (x, typ) -> (x, Base)) n.tn_output in
-  let loc_clk = List.map (fun (x, typ) -> (x, Base)) n.tn_local in
-  let in_clk = List.map (fun (x, typ) -> (x, Base)) n.tn_input in
+  let clock_decl = (fun (x, typ, tclk) -> (x, tclk_to_clk tclk)) in
+  let out_clk = List.map clock_decl n.tn_output in
+  let loc_clk = List.map clock_decl n.tn_local in
+  let in_clk = List.map clock_decl n.tn_input in
   let env = Gamma.adds n.tn_loc Vpatt Gamma.empty (out_clk@loc_clk) in
   let env = Gamma.adds n.tn_loc Vinput env in_clk in
   let equs = List.map (clock_equation env) n.tn_equs in
-  print_string "equs\n";
+
   let input =
     List.map
-      (fun (x, typ) -> let x', clk, _ = Gamma.find n.tn_loc env x in (x', typ, clk))
+      (fun (x, typ, clk) -> let x', clk, _ = Gamma.find n.tn_loc env x in (x', typ, clk))
       n.tn_input
   in
   let output =
     List.map
-      (fun (x, typ) -> let x', clk, _ = Gamma.find n.tn_loc env x in (x', typ, clk))
+      (fun (x, typ, clk) -> let x', clk, _ = Gamma.find n.tn_loc env x in (x', typ, clk))
       n.tn_output
   in
   let local =
     List.map
-      (fun (x, typ) -> let x', clk, _ = Gamma.find n.tn_loc env x in (x', typ, clk))
+      (fun (x, typ, clk) -> let x', clk, _ = Gamma.find n.tn_loc env x in (x', typ, clk))
       n.tn_local
   in
   let c_in = List.map (fun (_, _, clk) -> clk ) input in

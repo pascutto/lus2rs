@@ -77,8 +77,21 @@ local_param_list:
 ;
 
 param:
-  separated_nonempty_list(COMMA, IDENT) COLON typ
-                                  { List.map (fun id -> (id, $3)) $1 }
+  | separated_nonempty_list(COMMA, IDENT) COLON typ
+                                  { List.map (fun id -> (id, $3, PBase)) $1 }
+  | separated_nonempty_list(COMMA, IDENT) COLON typ WHEN const LPAR IDENT RPAR
+                                  {
+                                    List.map
+                                      (fun id -> (id, $3, PClk($7, $5)))
+                                      $1
+                                  }
+  | separated_nonempty_list(COMMA, IDENT) COLON typ WHEN IDENT
+                                  {
+                                    List.map
+                                      (fun id -> (id, $3, PClk($5,
+                                        mk_expr (LSE_const(Cbool true)))))
+                                      $1
+                                  }
 ;
 
 equation:
@@ -114,8 +127,14 @@ expr:
   | expr OR expr                  { mk_expr (LSE_binop (Op_or, $1, $3)) }
   | expr IMPL expr                { mk_expr (LSE_binop (Op_impl, $1, $3)) }
   | expr ARROW expr               { mk_expr (LSE_arrow ($1, $3)) }
-  | expr WHEN const LPAR expr RPAR
+  | expr WHEN const LPAR IDENT RPAR
                                   { mk_expr (LSE_when ($1, $3, $5)) }
+  | expr WHEN IDENT
+                                  {
+                                    mk_expr (LSE_when ($1,
+                                      mk_expr (LSE_const (Cbool true)),
+                                    $3))
+                                  }
   | MERGE IDENT matching+         { mk_expr (LSE_merge ($2, $3)) }
   | MINUS expr                    { mk_expr (LSE_unop (Op_uminus, $2)) }
   | NOT expr                      { mk_expr (LSE_unop (Op_not, $2)) }

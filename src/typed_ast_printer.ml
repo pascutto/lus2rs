@@ -85,7 +85,7 @@ and print_exp_desc fmt = function
       fprintf fmt "pre (@[%a@])" print_exp e
   | TE_current e ->
     fprintf fmt "current (@[%a@])" print_exp e
-  | TE_when (e, cond, clk) -> fprintf fmt "@[(@[%a@]) when @[%a@](@[%a@])@]" print_exp e print_exp cond print_exp clk
+  | TE_when (e, cond, clk) -> fprintf fmt "@[(@[%a@]) when @[%a@](@[%a@])@]" print_exp e print_exp cond Ident.print clk
   | TE_merge(clk,le) ->
     fprintf fmt "merge @[%a@] @[%a@]" Ident.print clk print_matching le
   | TE_tuple e_list ->
@@ -116,8 +116,14 @@ let print_eq fmt eq =
     (print_list Ident.print ",") eq.teq_patt.tpatt_desc
     print_exp eq.teq_expr
 
-let print_var_dec fmt (name, ty) =
-  fprintf fmt "%a : %a" Ident.print name print_base_type ty
+let print_var_dec fmt (name, ty, clk) =
+  match clk with
+  | TBase -> fprintf fmt "%a : %a" Ident.print name print_base_type ty
+  | TClk(cond, e) -> fprintf fmt "%a : %a when %a(%a)"
+                       Ident.print name
+                       print_base_type ty
+                       Ident.print cond
+                       print_exp e
 
 let rec print_var_dec_list = print_list print_var_dec ";"
 

@@ -15,13 +15,13 @@ open Lustre_ast_types
 
 type base_clock =
   | Base
-  | Clk of Ident.t * const
+  | Clk of Ident.t * c_expr
 
-type clock = base_clock list
+and clock = base_clock list
 
-type c_var = Ident.t * base_typ * base_clock
+and c_var = Ident.t * base_typ * base_clock
 
-type c_expr = {
+and c_expr = {
   cexpr_desc: c_expr_desc;
   cexpr_type: typ;
   cexpr_clock: clock;
