@@ -1,7 +1,8 @@
 
 all:
 	(cd src; $(MAKE))
-	(cd examples; $(MAKE))
+	(./auto_test.sh src/lus2rs)
+	# (cd examples; $(MAKE))
 
 compile:
 	(cd src; $(MAKE))

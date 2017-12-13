@@ -1,16 +1,14 @@
 #!/bin/bash
 
-shopt -s nullglob
-
 # Test script for lus2rs
 
-option=$2
 compiler=$1
+
 score=0
 max=0
 verbose=0
 
-echo "Test de $1"
+echo "***** Testing $1 *****"
 
 echo
 
@@ -24,38 +22,95 @@ fi;
 }
 
 part1 () {
+  score=0
+  max=0
 
-score=0
-max=0
+  echo "Part 1: syntactic analysis"
 
-echo "Part 1: syntactic analysis"
-
-echo -n "Good cases "
-for f in examples/*.lus; do
+  for f in examples/*.lus; do
     echo -n ".";
     max=`expr $max + 1`;
     compile --parse-only $f;
     case $? in
-	"1")
-	echo
-	echo "FAIL on "$f" (should have been accepted)";;
-	"0") score=`expr $score + 1`;;
-	*)
-	echo
-  echo "COMPILER FAIL on "$f"";;
+  	"1")
+    	echo
+    	echo "FAIL on "$f" (should have been accepted)";;
+  	"0") score=`expr $score + 1`;;
+  	*)
+    	echo
+      echo "COMPILER FAIL on "$f"";;
     esac
-done
-echo
+  done
+  echo
 
-percent=`expr 100 \* $score / $max`;
+  percent=`expr 100 \* $score / $max`;
+  echo -n "Syntactic analysis: $score/$max : $percent%";
+  echo
+}
 
-echo -n "Part 1: $score/$max : $percent%"; }
+part2 () {
+  score=0
+  max=0
 
-case $option in
-    "-v" )
+  echo
+  echo "Part 2: Typing"
+
+  for f in examples/*.lus; do
+    echo -n ".";
+    max=`expr $max + 1`;
+    compile --type-only $f;
+    case $? in
+  	"1")
+    	echo
+    	echo "FAIL on "$f" (should have been accepted)";;
+  	"0") score=`expr $score + 1`;;
+  	*)
+    	echo
+      echo "COMPILER FAIL on "$f"";;
+    esac
+  done
+  echo
+
+  percent=`expr 100 \* $score / $max`;
+  echo -n "Typing: $score/$max : $percent%";
+}
+
+part3 () {
+  score=0
+  max=0
+
+  echo
+  echo "Part 3: Clocking"
+
+  for f in examples/*.lus; do
+    echo -n ".";
+    max=`expr $max + 1`;
+    compile --type-only $f;
+    case $? in
+  	"1")
+    	echo
+    	echo "FAIL on "$f" (should have been accepted)";;
+  	"0") score=`expr $score + 1`;;
+  	*)
+    	echo
+      echo "COMPILER FAIL on "$f"";;
+    esac
+  done
+  echo
+
+  percent=`expr 100 \* $score / $max`;
+  echo -n "Clocking: $score/$max : $percent%";
+}
+
+case $2  in
+    "-v")
       verbose=1;
-      part1;;
-    * )
-      part1;;
+      part1;
+      part2;
+      part3;;
+    *)
+      part1;
+      part2;
+      part3;;
 esac
 echo
