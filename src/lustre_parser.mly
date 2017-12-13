@@ -67,7 +67,8 @@ node:
 
 local_params:
   | /* empty */                   { [] }
-  | VAR local_param_list          { $2 }
+  | VAR separated_nonempty_list(VAR, local_param_list)
+                                  { List.flatten $2 }
 ;
 
 local_param_list:
