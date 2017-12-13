@@ -1,0 +1,6 @@
+node bool_add(A: bool; B: bool) returns (Z: int);
+let
+	Z = (if A then 1 else 0)
+		+
+		(if B then 1 else 0);
+tel

@@ -1,0 +1,16 @@
+node carlights(TL, TR, LH, FL, LRL:bool) returns (side, low, high, fog, longer : bool);
+var fog_select, longer_select :bool;
+let
+  fog_select = FL;
+  longer_select = LRL;
+  side = false -> (not(pre(side) or pre(low) or pre(high)) and TL) or
+    ( (pre(high) or pre(low) ) and (TL or TR)) or
+      (if not(TL or TR or LH) then pre(side) else false);
+  low = false -> (pre(side) and TL) or
+    (pre(high) and LH) or
+      (if not(TL or TR or LH) then pre(low) else false);
+  high = false -> (pre(low) and LH ) or
+    (if not(TL or TR or LH) then pre(high) else false);
+  fog = pre(low) and fog_select;
+  longer = pre(high) and longer_select;
+tel

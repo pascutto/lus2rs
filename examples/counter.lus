@@ -1,0 +1,4 @@
+node counter() returns (Z: int);
+let
+	Z = 0 -> 1 + pre(Z);
+tel

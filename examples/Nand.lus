@@ -1,0 +1,7 @@
+node Nand(X: bool; Y: bool)
+  returns (Z: bool);
+var U: bool;
+let
+  U = X and Y;
+  Z = not U;
+tel
