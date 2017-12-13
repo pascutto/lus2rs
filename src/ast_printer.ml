@@ -20,9 +20,7 @@ let rec print_list f sep fmt = function
   | [x] -> f fmt x
   | h :: t -> fprintf fmt "%a%s@ %a" f h sep (print_list f sep) t
 
-let rec print_ls_patt_desc fmt = function
-  | LSP_ident id -> fprintf fmt "%s" id
-  | LSP_tuple l -> print_list (fun x -> fprintf fmt "%s") "," fmt l
+let rec print_ls_patt_desc fmt = print_list (fun x -> fprintf fmt "%s") "," fmt
 
 let rec print_list_eol f sep fmt = function
   | [] -> ()

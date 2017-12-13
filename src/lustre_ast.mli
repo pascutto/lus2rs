@@ -42,9 +42,7 @@ and ls_patt = {
   ppatt_loc: location;
 }
 
-and ls_patt_desc =
-  | LSP_ident of ident
-  | LSP_tuple of ident list
+and ls_patt_desc = ident list
 
 and ls_equation = {
   lseq_patt: ls_patt;

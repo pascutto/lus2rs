@@ -100,9 +100,11 @@ equation:
 ;
 
 pattern:
-  | IDENT                         { mk_patt (LSP_ident $1) }
-  | LPAR separated_nonempty_list(COMMA, IDENT) RPAR
-                                  { mk_patt (LSP_tuple $2) }
+  | separated_nonempty_list(COMMA, IDENT)
+                                  { mk_patt ($1) }
+  | LPAR pattern RPAR
+                                  { $2 }
+
 ;
 
 expr:

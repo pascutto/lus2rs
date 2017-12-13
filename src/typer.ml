@@ -388,25 +388,15 @@ let rec type_patt env p =
   { tpatt_desc = desc; tpatt_type = t; tpatt_loc = p.ppatt_loc; }
 
 and type_patt_desc env loc patt =
-  match patt with
-  | LSP_ident x -> begin
-      let x, typ =
-	match Gamma.find loc env x with
-	| x, t, Vpatt -> x, t
-	| _  -> error loc (InputVar x)
-      in
-      [x], [typ]
-    end
-  | LSP_tuple pl ->
-      let pl_tyl =
-	List.map
+  let pl_tyl = List.map
 	  (fun x ->
 	     match Gamma.find loc env x with
 	     | x, typ, Vpatt -> x, typ
 	     | _  -> error loc (InputVar x)
-	  ) pl
-      in
-      List.split pl_tyl
+   )
+   patt
+   in
+   List.split pl_tyl
 
 
 let type_equation env eq =
