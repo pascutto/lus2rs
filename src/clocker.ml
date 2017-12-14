@@ -22,6 +22,7 @@ module M = Map.Make(Ident)
 type error =
   | ExpectedClock of clock * clock
   | ExpectedBase of clock
+  | ExpectedSame
 
 exception Error of location * error
 let dummy_loc = Lexing.dummy_pos, Lexing.dummy_pos
@@ -36,7 +37,7 @@ let print_const fmt = function
 let print_base_clock fmt = function
   | Base -> fprintf fmt "_base_"
   | Clk(id, cons) -> begin match cons.cexpr_desc with
-    | CE_const(c) -> fprintf fmt "%a(@[%a@])" Ident.print id print_const c
+    | CE_const(c) -> fprintf fmt "%a(@[%a@])" print_const c Ident.print id
     | _ -> assert false
     end
 
@@ -58,22 +59,20 @@ let report fmt = function
     fprintf fmt
       "This expression has clock %a but is expected to have a type simple clock"
       print_clock clk
+  | ExpectedSame ->
+    fprintf fmt
+      "Thess expressions are supposed to be on the same clock."
+
 
 module Delta = struct
-
   let nodes = Hashtbl.create 97
 
-  (* TODO Depreciated : remove this *)
-  let is_primitive f = false
-
   let find n =
-    Hashtbl.find nodes n , false
+    Hashtbl.find nodes n
 
   let add x clk =
     Hashtbl.replace nodes x (x, clk);
     x
-
-  let save () = Hashtbl.fold (fun key (_, clk) env -> (key, clk)::env) nodes []
 end
 
 type io = Vinput | Vpatt
@@ -113,11 +112,10 @@ let base_clock_of_clock loc = function
   | [c] -> c
   | e -> error loc (ExpectedBase e)
 
-let compatible_base actual_clk expected_clk=
-  actual_clk = expected_clk
+let compatible_base actual_clk expected_clk =
+  (expected_clk = Base) || (actual_clk = Base) || (actual_clk = expected_clk)
 
-let compatible actual_clk expected_clk = actual_clk = expected_clk
-  (*
+let compatible actual_clk expected_clk =
   try
     List.fold_left2
       (fun well_c ac_c ex_c ->
@@ -125,7 +123,6 @@ let compatible actual_clk expected_clk = actual_clk = expected_clk
          (well_c && well_c'))
       true actual_clk expected_clk
   with Invalid_argument _ -> false
-*)
 
 let rec is_constant env e =
   match e.texpr_desc with
@@ -139,6 +136,17 @@ let rec const_of_expr e =
   | TE_tuple el ->
     List.fold_right (fun e acc -> const_of_expr e @ acc) el []
   | _ -> assert false
+
+let all_same_clk el =
+  let rec aux = function
+    | [] -> true, [Base]
+    | [x] -> true, x.cexpr_clock
+    | h::t -> begin
+        let b, clk = aux t in
+        compatible h.cexpr_clock ([List.hd clk]), h.cexpr_clock@clk
+    end
+  in
+  fst(aux el)
 
 let rec clock_expr env e =
   let desc, clk = clock_expr_desc env e.texpr_loc e.texpr_desc in
@@ -156,8 +164,11 @@ and clock_expr_desc env loc = function
     try
       let x, clk, _ = Gamma.find loc env x in
       CE_ident x , [clk]
-    with _ -> assert false
-  end
+    with _ ->
+      let x, clk = Epsilon.find loc x in
+      CE_ident x , [clk]
+    end
+
   | TE_unop (op, e) ->
     let ce = clock_expr env e in
     CE_unop(op, ce) , ce.cexpr_clock
@@ -184,11 +195,33 @@ and clock_expr_desc env loc = function
     then error loc (ExpectedClock(clk3, clk2))
     else CE_if(ce1, ce2, ce3), clk1
 
-  | TE_app (f, el) -> assert false (* TODO *)
+  | TE_app (f, el) ->
+    (* FIXME This might be wrong *)
+    let elclk = List.map (clock_expr env) el in
+    let allsame = all_same_clk elclk in
+    if allsame then begin
+      let _, (clki, clko) = Delta.find f in
+      CE_app (f, elclk), clko
+    end
+    else error loc ExpectedSame
 
-  | TE_arrow (e1, e2) -> assert false (* TODO *)
+  | TE_arrow (e1, e2) ->
+    let ce1 = clock_expr env e1 in
+    let clk1 = ce1.cexpr_clock in
+    let ce2 = clock_expr env e2 in
+    let clk2 = ce2.cexpr_clock in
+    if clk1 = clk2
+    then CE_arrow (ce1, ce2), clk1
+    else error loc (ExpectedClock(clk2, clk1))
 
-  | TE_fby (e1, e2) -> assert false (* TODO *)
+  | TE_fby (e1, e2) ->
+    let ce1 = clock_expr env e1 in
+    let clk1 = ce1.cexpr_clock in
+    let ce2 = clock_expr env e2 in
+    let clk2 = ce2.cexpr_clock in
+    if clk1 = clk2
+    then CE_fby (ce1, ce2), clk1
+    else error loc (ExpectedClock(clk2, clk1))
 
   | TE_pre e ->
     let ce = clock_expr env e in
@@ -198,13 +231,16 @@ and clock_expr_desc env loc = function
     let ce = clock_expr env e in
     CE_current ce, [Base]
 
-  | TE_tuple el -> assert false (* TODO *)
-    (* not_a_nested_tuple n loc;
-    let tel = List.map (type_expr env) el in
-    TE_tuple tel,
-    (List.map (fun e -> base_clock_of_clock e.texpr_loc e.texpr_type) tel) *)
+  | TE_tuple el ->
+    let tel = List.map (clock_expr env) el in
+    CE_tuple tel,
+    (List.map (fun e -> base_clock_of_clock e.cexpr_loc e.cexpr_clock) tel)
 
-  | TE_when(e, cond, clk) -> assert false (* TODO *)
+  | TE_when(e, cond, clk) ->
+    let ce = clock_expr env e in
+    let ccond = clock_expr env cond in
+    CE_when(ce, ccond, clk), [Clk(clk, ccond)]
+
   | TE_merge(e, mat) -> assert false (* TODO *)
   | _ -> assert false
 
@@ -320,7 +356,7 @@ let clock_node n =
 
 let clock_constant c =
   let cexpr = clock_expr Gamma.empty c.tc_desc in
-  let name = Epsilon.add c.tc_desc.texpr_loc c.tc_name (List.hd cexpr.cexpr_type) in
+  let name = Epsilon.add c.tc_desc.texpr_loc c.tc_name (List.hd cexpr.cexpr_clock) in
   {
     cc_name = name;
     cc_desc = cexpr;

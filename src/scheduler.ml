@@ -43,7 +43,7 @@ let rec add_vars_of_exp s {cexpr_desc = e} =
   | CE_tuple l -> List.fold_left add_vars_of_exp s l
   | CE_merge (id, mat) ->
     List.fold_left add_vars_of_exp (S.add id s) (List.map snd mat)
-  | CE_when (e, cond, clk) -> add_vars_of_exp (add_vars_of_exp s e) clk
+  | CE_when (e, cond, clk) -> S.add clk s
   | CE_if (e1, e2, e3) ->
     add_vars_of_exp (add_vars_of_exp (add_vars_of_exp s e1) e2) e3
 

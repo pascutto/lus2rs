@@ -94,7 +94,7 @@ and print_exp_desc fmt = function
     fprintf fmt "current (@[%a@])" print_exp e
   | CE_when (e, cond, clk) ->
     fprintf fmt "@[(@[%a@]) when @[%a@](@[%a@])@]"
-      print_exp e print_exp cond print_exp clk
+      print_exp e print_exp cond Ident.print clk
   | CE_merge(clk,le) ->
     fprintf fmt "merge @[%a@] @[%a@]" Ident.print clk print_matching le
   | CE_tuple e_list ->

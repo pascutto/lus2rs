@@ -41,7 +41,7 @@ and c_expr_desc =
   | CE_pre of c_expr
   | CE_current of c_expr
   | CE_merge of Ident.t * (c_expr * c_expr) list
-  | CE_when of c_expr * c_expr * c_expr
+  | CE_when of c_expr * c_expr * Ident.t
   | CE_tuple of c_expr list
 
 type c_patt = {

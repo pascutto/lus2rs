@@ -34,8 +34,8 @@ let spec =
    "-t", Arg.Set type_only, "  stops after typing";
    "--clock-only", Arg.Set clock_only, "  stops after clocking";
    "-c", Arg.Set clock_only, "  stops after clocking";
-   "--schedule-only", Arg.Set type_only, "  stops after scheduling";
-   "-s", Arg.Set type_only, "  stops after scheduling";
+   "--schedule-only", Arg.Set schedule_only, "  stops after scheduling";
+   "-s", Arg.Set schedule_only, "  stops after scheduling";
    "--norm-only", Arg.Set norm_only, "  stops after normalization";
    "-n", Arg.Set norm_only, "  stops after normalization";
    "--verbose", Arg.Set verbose, "print intermediate transformations";

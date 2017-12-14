@@ -112,8 +112,7 @@ let rec normalize ctx e =
 
   | CE_when (e, cond, clk) ->
     let ctx, e' = normalize ctx e in
-    let ctx, clk' = normalize ctx clk in
-    ctx, {e with cexpr_desc = CE_when(e', cond, clk')}
+    ctx, {e with cexpr_desc = CE_when(e', cond, clk)}
 
   | CE_merge (id, le) -> assert false
 
