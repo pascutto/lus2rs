@@ -196,13 +196,11 @@ and clock_expr_desc env loc = function
     else CE_if(ce1, ce2, ce3), clk1
 
   | TE_app (f, el) ->
-    (* FIXME This might be wrong *)
-    let elclk = List.map (clock_expr env) el in
-    let allsame = all_same_clk elclk in
-    if allsame then begin
-      let _, (clki, clko) = Delta.find f in
-      CE_app (f, elclk), clko
-    end
+    let cel = List.map (clock_expr env) el in
+    let celclk = List.flatten (List.map (fun x -> x.cexpr_clock) cel) in
+    let _, (clki, clko) = Delta.find f in
+    if compatible celclk clki then
+      CE_app (f, cel), clko
     else error loc ExpectedSame
 
   | TE_arrow (e1, e2) ->
