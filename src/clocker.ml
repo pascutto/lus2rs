@@ -11,6 +11,8 @@ Clément PASCUTTO <clement.pascutto@ens.fr
 ########
 *)
 
+(* FIXME : Add correct subtyping *)
+
 open Ast_types_lustre
 open Ast_typed_lustre
 open Ast_clocked_lustre
