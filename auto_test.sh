@@ -9,7 +9,6 @@ max=0
 verbose=0
 
 echo "***** Testing $1 *****"
-
 echo
 
 compile () {
@@ -73,6 +72,7 @@ part2 () {
 
   percent=`expr 100 \* $score / $max`;
   echo -n "Typing: $score/$max : $percent%";
+  echo
 }
 
 part3 () {
@@ -100,6 +100,63 @@ part3 () {
 
   percent=`expr 100 \* $score / $max`;
   echo -n "Clocking: $score/$max : $percent%";
+  echo
+}
+
+part4 () {
+  score=0
+  max=0
+
+  echo
+  echo "Part 3: Normalizing"
+
+  for f in examples/*.lus; do
+    echo -n ".";
+    max=`expr $max + 1`;
+    compile --norm-only $f;
+    case $? in
+  	"1")
+    	echo
+    	echo "FAIL on "$f" (should have been accepted)";;
+  	"0") score=`expr $score + 1`;;
+  	*)
+    	echo
+      echo "COMPILER FAIL on "$f"";;
+    esac
+  done
+  echo
+
+  percent=`expr 100 \* $score / $max`;
+  echo -n "Normalizing: $score/$max : $percent%";
+  echo
+}
+
+part5 () {
+  score=0
+  max=0
+
+  echo
+  echo "Part 5: Scheduling"
+
+  for f in examples/*.lus; do
+    echo -n ".";
+    max=`expr $max + 1`;
+    compile --schedule-only $f;
+    case $? in
+  	"1")
+    	echo
+    	echo "FAIL on "$f" (should have been accepted)";;
+  	"0") score=`expr $score + 1`;;
+  	*)
+    	echo
+      echo "COMPILER FAIL on "$f"";;
+    esac
+  done
+  echo
+
+  percent=`expr 100 \* $score / $max`;
+  echo -n "Scheduling: $score/$max : $percent%";
+  echo
 }
 
 case $2  in
@@ -107,10 +164,14 @@ case $2  in
       verbose=1;
       part1;
       part2;
-      part3;;
+      part3;
+      part4;
+      part5;;
     *)
       part1;
       part2;
-      part3;;
+      part3;
+      part4;
+      part5;;
 esac
 echo
