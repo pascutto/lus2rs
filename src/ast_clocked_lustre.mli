@@ -15,7 +15,7 @@ open Ast_types_lustre
 
 type base_clock =
   | Base
-  | Clk of Ident.t * c_expr
+  | Clk of base_clock * Ident.t * c_expr
 
 and clock = base_clock list
 

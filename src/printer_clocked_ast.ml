@@ -29,8 +29,9 @@ let rec print_base_type fmt = function
 
 and print_base_clock fmt = function
   | Base -> fprintf fmt "base"
-  | Clk (id, cond) -> begin match cond.cexpr_desc with
-      | CE_const(c) -> fprintf fmt "%a(@[%a@])" print_const c Ident.print id
+  | Clk (ck, id, cond) -> begin match cond.cexpr_desc with
+      | CE_const(c) -> fprintf fmt "(%a on %a(@[%a@]))"
+                         print_base_clock ck print_const c Ident.print id
       | _ -> assert false
     end
 
@@ -127,11 +128,12 @@ let print_eq fmt eq =
 
 let print_var_dec fmt (name, ty, clk) = match clk with
   | Base -> fprintf fmt "%a : %a" Ident.print name print_base_type ty
-  | Clk(cond, e) -> fprintf fmt "%a : %a when %a(%a)"
+  | Clk(ck, id, cond) -> fprintf fmt "(%a : %a :: %a on %a(%a))"
                        Ident.print name
                        print_base_type ty
-                       Ident.print cond
-                       print_exp e
+                       print_base_clock ck
+                       print_exp cond
+                       Ident.print id
 
 let rec print_var_dec_list = print_list print_var_dec ";"
 
