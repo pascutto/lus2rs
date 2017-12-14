@@ -137,7 +137,7 @@ let print_node fmt nd =
     (print_list_eol print_eq ";") nd.tn_equs
 
 let print_constant fmt cst =
-  fprintf fmt "@[const (%a) = @[%a@]@;]\n"
+  fprintf fmt "@[const (%a) = @[%a;@]@]"
     Ident.print cst.tc_name
     print_exp cst.tc_desc
 

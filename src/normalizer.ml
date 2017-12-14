@@ -149,10 +149,14 @@ let normalize_equation node e =
     cn_local = locals@node.cn_local;
     cn_equs = { e with ceq_expr = e' } :: (List.rev new_eqs) @ node.cn_equs }
 
-let normalize_file =
-  List.map
-    (fun n ->
-      let n =
-	List.fold_left normalize_equation { n with cn_equs = [] } n.cn_equs
-      in
-      { n with cn_equs = List.rev n.cn_equs })
+let normalize_node = function n ->
+  let n =
+    List.fold_left normalize_equation { n with cn_equs = [] } n.cn_equs
+  in
+  { n with cn_equs = List.rev n.cn_equs }
+
+let normalize_element = function
+  | C_Node n -> C_Node(normalize_node n)
+  | C_Constant c -> C_Constant c
+
+let normalize_file = List.map normalize_element

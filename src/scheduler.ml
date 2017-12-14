@@ -93,5 +93,9 @@ let schedule_node n =
   let equs = schedule_equs n.cn_loc n.cn_input n.cn_equs in
   { n with cn_equs = equs; }
 
+let schedule_element = function
+  | C_Node n -> C_Node(schedule_node n)
+  | C_Constant c -> C_Constant c
+
 let schedule =
-  List.map schedule_node
+  List.map schedule_element
