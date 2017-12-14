@@ -11,8 +11,8 @@ Clément PASCUTTO <clement.pascutto@ens.fr
 ########
 *)
 
-open Lustre_ast_types
-open Lustre_clocked_ast
+open Ast_types_lustre
+open Ast_clocked_lustre
 
 exception Causality of location
 

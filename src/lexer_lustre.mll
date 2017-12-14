@@ -13,8 +13,8 @@ Clément PASCUTTO <clement.pascutto@ens.fr
 
 {
   open Lexing
-  open Lustre_parser
-  open Lustre_ast
+  open Parser_lustre
+  open Ast_lustre
 
   exception Lexing_error of string
 

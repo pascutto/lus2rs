@@ -11,7 +11,7 @@ Clément PASCUTTO <clement.pascutto@ens.fr
 ########
 *)
 
-open Lustre_ast_types
+open Ast_types_lustre
 
 type pclock =
   | PBase

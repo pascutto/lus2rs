@@ -12,8 +12,8 @@ Clément PASCUTTO <clement.pascutto@ens.fr
 *)
 
 open Format
-open Lustre_ast_types
-open Lustre_typed_ast
+open Ast_types_lustre
+open Ast_typed_lustre
 
 let verbose = ref false
 

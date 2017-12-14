@@ -24,10 +24,10 @@ setup.log
 lus2rs
 
 # menhir generated files
-lustre_parser.ml
-lustre_parser.mli
+parser_lustre.ml
+parser_lustre.mli
 *.automaton
 *.conflicts
 
 # ocamllex generated files
-lustre_lexer.ml
+lexer_lustre.ml

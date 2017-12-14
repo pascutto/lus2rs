@@ -13,10 +13,10 @@ Clément PASCUTTO <clement.pascutto@ens.fr
 
 open Format
 open Lexing
-open Lustre_lexer
-open Lustre_parser
-open Lustre_ast
-open Lustre_ast_types
+open Lexer_lustre
+open Parser_lustre
+open Ast_lustre
+open Ast_types_lustre
 
 let usage = "usage: "^Sys.argv.(0)^" [options] file.lus main"
 
@@ -70,13 +70,13 @@ let () =
   let lb = Lexing.from_channel c in
   try
     (* Parsing *)
-    let f = Lustre_parser.file Lustre_lexer.token lb in
+    let f = Parser_lustre.file Lexer_lustre.token lb in
     close_in c;
     if !verbose then begin
       Format.printf "/**************************************/@.";
       Format.printf "/*            Parsed ast              */@.";
       Format.printf "/**************************************/@.";
-      Ast_printer.print_program f
+      Printer_ast.print_program f
     end;
     if !parse_only then exit 0;
 
@@ -86,7 +86,7 @@ let () =
       Format.printf "/**************************************/@.";
       Format.printf "/*             Typed ast              */@.";
       Format.printf "/**************************************/@.";
-      Typed_ast_printer.print_program_v ft
+      Printer_typed_ast.print_program_v ft
     end;
     if !type_only then exit 0;
 
@@ -96,7 +96,7 @@ let () =
       Format.printf "/**************************************/@.";
       Format.printf "/*            Clocked ast             */@.";
       Format.printf "/**************************************/@.";
-      Clocked_ast_printer.print_program_v fc
+      Printer_clocked_ast.print_program_v fc
     end;
     if !clock_only then exit 0;
 
@@ -106,7 +106,7 @@ let () =
       Format.printf "/**************************************/@.";
       Format.printf "/*           Normalized ast           */@.";
       Format.printf "/**************************************/@.";
-      Clocked_ast_printer.print_program fn
+      Printer_clocked_ast.print_program fn
     end;
     if !norm_only then exit 0;
 
@@ -116,7 +116,7 @@ let () =
       Format.printf "/**************************************/@.";
       Format.printf "/*           Scheduled ast            */@.";
       Format.printf "/**************************************/@.";
-      Clocked_ast_printer.print_program fs
+      Printer_clocked_ast.print_program fs
     end;
     if !schedule_only then exit 0;
 
@@ -125,7 +125,7 @@ let () =
     	report_loc (lexeme_start_p lb, lexeme_end_p lb);
     	eprintf "Lexical error: %s\n@." s;
     	exit 1
-    | Lustre_parser.Error ->
+    | Parser_lustre.Error ->
     	report_loc (lexeme_start_p lb, lexeme_end_p lb);
     	eprintf "Syntax error\n@.";
     	exit 1

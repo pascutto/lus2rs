@@ -12,8 +12,8 @@ Clément PASCUTTO <clement.pascutto@ens.fr
 *)
 
 %{
-  open Lustre_ast
-  open Lustre_ast_types
+  open Ast_lustre
+  open Ast_types_lustre
   open Parsing
 
   let loc () = symbol_start_pos (), symbol_end_pos ()
@@ -42,7 +42,7 @@ Clément PASCUTTO <clement.pascutto@ens.fr
 %nonassoc CURRENT NOT PRE
 
 %start file
-%type <Lustre_ast.ls_file> file
+%type <Ast_lustre.ls_file> file
 
 %%
 

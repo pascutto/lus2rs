@@ -11,9 +11,9 @@ Clément PASCUTTO <clement.pascutto@ens.fr
 ########
 *)
 
-open Lustre_ast_types
-open Lustre_typed_ast
-open Lustre_clocked_ast
+open Ast_types_lustre
+open Ast_typed_lustre
+open Ast_clocked_lustre
 open Format
 
 module S = Set.Make(Ident)

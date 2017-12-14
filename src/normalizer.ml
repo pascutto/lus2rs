@@ -11,7 +11,7 @@ Clément PASCUTTO <clement.pascutto@ens.fr
 ########
 *)
 
-open Lustre_clocked_ast
+open Ast_clocked_lustre
 
 let new_local =
   let cpt = ref 0 in

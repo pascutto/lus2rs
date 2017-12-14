@@ -1,5 +1,5 @@
-CMO=lustre_lexer.cmo lustre_parser.cmo ident.cmo ast_printer.cmo typer.cmo typed_ast_printer.cmo clocker.cmo clocked_ast_printer.cmo normalizer.cmo scheduler.cmo lus2rs.cmo
-GENERATED = lustre_lexer.ml lustre_parser.ml lustre_parser.mli
+CMO=lexer_lustre.cmo parser_lustre.cmo ident.cmo printer_ast.cmo typer.cmo printer_typed_ast.cmo clocker.cmo printer_clocked_ast.cmo normalizer.cmo scheduler.cmo lus2rs.cmo
+GENERATED = lexer_lustre.ml parser_lustre.ml parser_lustre.mli
 BIN=lus2rs
 FLAGS=
 
@@ -25,13 +25,13 @@ $(BIN): $(CMO)
 	menhir --infer -v $<
 
 clean:
-	rm -f *.cm[io] *.o *~ $(BIN) $(GENERATED) lustre_parser.automaton lustre_parser.conflicts .depend
+	rm -f *.cm[io] *.o *~ $(BIN) $(GENERATED) parser_lustre.automaton parser_lustre.conflicts .depend
 
-lustre_parser.ml: lustre_ast_types.cmi lustre_ast.cmi
+parser_lustre.ml: ast_types_lustre.cmi ast_lustre.cmi
 
-typer.ml: lustre_typed_ast.cmi
+typer.ml: ast_typed_lustre.cmi
 
-clocker.ml: lustre_clocked_ast.cmi
+clocker.ml: ast_clocked_lustre.cmi
 
 .depend depend: $(GENERATED)
 	rm -f .depend
