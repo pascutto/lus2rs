@@ -23,7 +23,7 @@ Clément PASCUTTO <clement.pascutto@ens.fr
 %}
 
 %token AND ARROW BOOL COLON COMMA LE LT GE GT FBY WHEN MERGE
-%token DIV ELSE EQUALS NEQ REAL IF IMPL INT LET LPAR MINUS MOD NODE NOT OR %token PLUS PRE CURRENT RETURNS RPAR SEMICOLON TIMES TEL THEN VAR
+%token DIV ELSE EQUALS NEQ REAL IF IMPL INT LET LPAR MINUS MOD NODE NOT OR %token PLUS PRE CURRENT RETURNS RPAR SEMICOLON TIMES TEL THEN VAR CONST
 %token <bool> BOOL_CONST
 %token <int> INT_CONST
 %token <float> REAL_CONST
@@ -47,15 +47,26 @@ Clément PASCUTTO <clement.pascutto@ens.fr
 %%
 
 file:
-  node* EOF { $1 }
+  element* EOF { $1 }
 ;
+
+element:
+  | node                          { $1 }
+  | const_decl                    { $1 }
+
+const_decl:
+  CONST IDENT EQUALS expr SEMICOLON
+                                  { LS_Constant {
+                                    lsc_name = $2;
+                                    lsc_desc = $4;
+                                  } }
 
 node:
   NODE name = IDENT LPAR ins = separated_list(SEMICOLON, param) RPAR
   RETURNS LPAR outs = separated_list(SEMICOLON, param) RPAR SEMICOLON
   locals = local_params
   LET eqs = equation+ TEL SEMICOLON?
-                                  { {
+                                  { LS_Node {
                                     lsn_name = name;
                                   	lsn_inputs = List.flatten ins;
                                   	lsn_outputs = List.flatten outs;

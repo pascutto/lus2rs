@@ -43,7 +43,8 @@ Clément PASCUTTO <clement.pascutto@ens.fr
     	"true", BOOL_CONST(true);
     	"var", VAR;
       "when", WHEN;
-      "merge", MERGE
+      "merge", MERGE;
+      "const", CONST
     ]
 }
 

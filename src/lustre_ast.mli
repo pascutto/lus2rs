@@ -49,6 +49,10 @@ and ls_equation = {
   lseq_expr: ls_expr;
 }
 
+and ls_element =
+  | LS_Node of ls_node
+  | LS_Constant of ls_constant
+
 and ls_node = {
   lsn_name: ident;
   lsn_inputs: (ident * base_typ * pclock) list;
@@ -58,4 +62,9 @@ and ls_node = {
   lsn_loc: location;
 }
 
-and ls_file = ls_node list
+and ls_constant = {
+  lsc_name: ident;
+  lsc_desc: ls_expr;
+}
+
+and ls_file = ls_element list

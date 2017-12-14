@@ -127,5 +127,14 @@ let print_node fmt nd =
     print_var_dec_list nd.lsn_locals
     (print_list_eol print_eq ";") nd.lsn_eqs
 
+let print_constant fmt cst =
+  fprintf fmt "@[const (%s) = @[%a@]@]"
+    cst.lsc_name
+    print_exp cst.lsc_desc
+
+let print_element fmt = function
+  | LS_Node(n) -> print_node fmt n
+  | LS_Constant(c) -> print_constant fmt c
+
 let print_program ndl =
-  List.iter (fun nd -> Format.printf "%a@\n@." print_node nd) ndl
+  List.iter (fun nd -> Format.printf "%a@\n@." print_element nd) ndl

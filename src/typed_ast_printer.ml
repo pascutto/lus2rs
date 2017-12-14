@@ -136,10 +136,19 @@ let print_node fmt nd =
     print_var_dec_list nd.tn_local
     (print_list_eol print_eq ";") nd.tn_equs
 
+let print_constant fmt cst =
+  fprintf fmt "@[const (%a) = @[%a@]@;]\n"
+    Ident.print cst.tc_name
+    print_exp cst.tc_desc
+
+let print_element fmt = function
+  | T_Node(n) -> print_node fmt n
+  | T_Constant(c) -> print_constant fmt c
+
 let print_program ndl =
   verbose := false;
-  List.iter (fun nd -> Format.printf "%a@\n@." print_node nd) ndl
+  List.iter (fun nd -> Format.printf "%a@\n@." print_element nd) ndl
 
 let print_program_v ndl =
   verbose := true;
-  print_program ndl
+  List.iter (fun nd -> Format.printf "%a@\n@." print_element nd) ndl

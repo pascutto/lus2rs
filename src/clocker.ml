@@ -98,6 +98,17 @@ module Gamma = struct
 
 end
 
+module Epsilon = struct
+
+  let consts = Hashtbl.create 97
+
+  let find loc = Hashtbl.find consts
+
+  let add loc x clk =
+    Hashtbl.add consts x (x, clk);
+    x
+end
+
 let base_clock_of_clock loc = function
   | [c] -> c
   | e -> error loc (ExpectedBase e)
@@ -307,5 +318,19 @@ let clock_node n =
   in
   node
 
+let clock_constant c =
+  let cexpr = clock_expr Gamma.empty c.tc_desc in
+  let name = Epsilon.add c.tc_desc.texpr_loc c.tc_name (List.hd cexpr.cexpr_type) in
+  {
+    cc_name = name;
+    cc_desc = cexpr;
+    cc_type = cexpr.cexpr_type;
+    cc_clock = [Base];
+  }
+
+let clock_element = function
+  | T_Node n -> C_Node(clock_node n)
+  | T_Constant c -> C_Constant(clock_constant c)
+
 let clock_program ndl  =
-  List.map clock_node ndl
+  List.map clock_element ndl

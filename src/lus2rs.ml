@@ -100,6 +100,7 @@ let () =
     end;
     if !clock_only then exit 0;
 
+    (*
     (* Normalizing *)
     let fn = Normalizer.normalize_file fc in
     if !verbose then begin
@@ -119,6 +120,7 @@ let () =
       Clocked_ast_printer.print_program fs
     end;
     if !schedule_only then exit 0;
+    *)
 
   with
     | Lexing_error s ->

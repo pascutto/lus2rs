@@ -61,4 +61,14 @@ type t_node = {
   tn_loc: location;
 }
 
-type t_file = t_node list
+type t_constant = {
+  tc_name: Ident.t;
+  tc_desc: t_expr;
+  tc_type: typ;
+}
+
+type t_element =
+  | T_Node of t_node
+  | T_Constant of t_constant
+
+type t_file = t_element list

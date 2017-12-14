@@ -14,6 +14,57 @@
 --        o Otherwise, it keeps its previous state.
 
 
+-----------------------------------------------------------------------
+-----------------------------------------------------------------------
+
+-- returns the absolute value of 2 reals
+node abs (v : real) returns (a : real) ;
+let
+	a = if v >= 0.0 then v else -v ;
+tel
+
+-- returns the average values of 2 reals
+node Average(a, b: real) returns (z : real);
+let
+	z = (a+b)/2.0 ;
+tel
+
+-- returns the maximum values of 2 reals
+node max2 (one, two  : real) returns (m : real) ;
+let
+	m = if one > two then one else two ;
+tel
+
+-- returns the minimum values of 2 reals
+node min2 (one, two  : real) returns (m : real) ;
+let
+	m = if one < two then one else two ;
+tel
+
+-- returns the median values of 3 reals
+node Median(a, b, c : real) returns (z : real);
+let
+	z = a + b + c - min2 (a, min2(b,c)) - max2 (a, max2(b,c)) ;
+tel
+
+node noneoftree (f1, f2, f3 : bool) returns (r : bool);
+let
+	 r = not f1 and not f2 and not f3 ;
+tel
+
+node alloftree (f1, f2, f3 : bool) returns (r : bool);
+let
+	 r =  f1 and f2 and f3 ;
+tel
+
+node oneoftree (f1, f2, f3 : bool) returns (r : bool);
+let
+	r = f1 and not f2 and not f3  or
+	    f2 and not f1 and not f3  or
+	    f3 and not f1 and not f2 ;
+tel
+
+
 const FAILURE = -999.0; -- a fake temperature given when all sensors are broken
 const TMIN = 6.0;
 const TMAX = 9.0;
@@ -68,58 +119,4 @@ node not_a_sauna2(T,  T1, T2, T3 : real; Heat_on: bool) returns (ok:bool);
 
 let
   ok = true -> pre T < TMAX - 6.0 ;
-tel
-
-
-
------------------------------------------------------------------------
------------------------------------------------------------------------
-
--- returns the absolute value of 2 reals
-node abs (v : real) returns (a : real) ;
-let
-	a = if v >= 0.0 then v else -v ;
-tel
-
--- returns the average values of 2 reals
-node Average(a, b: real) returns (z : real);
-let
-	z = (a+b)/2.0 ;
-tel
-
--- returns the median values of 3 reals
-node Median(a, b, c : real) returns (z : real);
-let
-	z = a + b + c - min2 (a, min2(b,c)) - max2 (a, max2(b,c)) ;
-tel
-
-
--- returns the maximum values of 2 reals
-node max2 (one, two  : real) returns (m : real) ;
-let
-	m = if one > two then one else two ;
-tel
-
--- returns the minimum values of 2 reals
-node min2 (one, two  : real) returns (m : real) ;
-let
-	m = if one < two then one else two ;
-tel
-
-
-node noneoftree (f1, f2, f3 : bool) returns (r : bool);
-let
-	 r = not f1 and not f2 and not f3 ;
-tel
-
-node alloftree (f1, f2, f3 : bool) returns (r : bool);
-let
-	 r =  f1 and f2 and f3 ;
-tel
-
-node oneoftree (f1, f2, f3 : bool) returns (r : bool);
-let
-	r = f1 and not f2 and not f3  or
-	    f2 and not f1 and not f3  or
-	    f3 and not f1 and not f2 ;
 tel
