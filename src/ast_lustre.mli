@@ -15,7 +15,7 @@ open Ast_types_lustre
 
 type pclock =
   | PBase
-  | PClk of ident * ls_expr
+  | PClk of ident * const
 
 and ls_expr = {
   pexpr_desc: ls_expr_desc;
@@ -32,10 +32,10 @@ and ls_expr_desc =
   | LSE_fby of ls_expr * ls_expr
   | LSE_pre of ls_expr
   | LSE_current of ls_expr
-  | LSE_merge of ident * (ls_expr * ls_expr) list
-  | LSE_when of ls_expr * ls_expr * ident
+  | LSE_merge of ident * (const * ls_expr) list
+  | LSE_when of ls_expr * const * ident
   | LSE_tuple of ls_expr list
-  | LSE_if of ls_expr * ls_expr * ls_expr
+  | LSE_if of ident * ls_expr * ls_expr
 
 and ls_patt = {
   ppatt_desc: ls_patt_desc;

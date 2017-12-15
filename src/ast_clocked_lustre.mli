@@ -15,7 +15,7 @@ open Ast_types_lustre
 
 type base_clock =
   | Base
-  | Clk of base_clock * Ident.t * c_expr
+  | Clk of base_clock * Ident.t * const
 
 and clock = base_clock list
 
@@ -31,7 +31,6 @@ and c_expr = {
 and c_expr_desc =
   | CE_const of const
   | CE_ident of Ident.t
-  | CE_if of c_expr * c_expr * c_expr
   | CE_binop of binop * c_expr * c_expr
   | CE_unop of unop * c_expr
   | CE_arrow of c_expr * c_expr
@@ -40,8 +39,8 @@ and c_expr_desc =
   | CE_prim of Ident.t * c_expr list (* ?? *)
   | CE_pre of c_expr
   | CE_current of c_expr
-  | CE_merge of Ident.t * (c_expr * c_expr) list
-  | CE_when of c_expr * c_expr * Ident.t
+  | CE_merge of Ident.t * (const * c_expr) list
+  | CE_when of c_expr * const * Ident.t
   | CE_tuple of c_expr list
 
 type c_patt = {

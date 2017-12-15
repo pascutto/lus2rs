@@ -59,9 +59,9 @@ let rec print_exp fmt e = match e.pexpr_desc with
     fprintf fmt "@[(@[%a@]) @[%a@] (@[%a@])@]"
       print_exp e1 print_binop op print_exp e2
   | LSE_unop (op, e) -> fprintf fmt "%a(%a)" print_unop op print_exp e
-  | LSE_if (e1, e2, e3) ->
-    fprintf fmt "@[if (@[%a@]) then (@[%a@]) else (@[%a@])@]"
-      print_exp e1 print_exp e2 print_exp e3
+  | LSE_if (id, e2, e3) ->
+    fprintf fmt "@[if (@[%s@]) then (@[%a@]) else (@[%a@])@]"
+      id print_exp e2 print_exp e3
   | LSE_app (name, e_list) ->
       fprintf fmt "%s(@[%a@])" name print_arg_list e_list
   | LSE_arrow (l, r) ->
@@ -72,7 +72,8 @@ let rec print_exp fmt e = match e.pexpr_desc with
       fprintf fmt "pre (@[%a@])" print_exp e
   | LSE_current e ->
     fprintf fmt "current (@[%a@])" print_exp e
-  | LSE_when (e, cond, clk) -> fprintf fmt "@[(@[%a@]) when @[%a@](@[%s@])@]" print_exp e print_exp cond clk
+  | LSE_when (e, cond, clk) -> fprintf fmt "@[(@[%a@]) when @[%a@](@[%s@])@]"
+                                 print_exp e print_const cond clk
   | LSE_merge(clk,le) ->
     fprintf fmt "merge @[%s@] @[%a@]" clk print_matching le
   | LSE_tuple e_list ->
@@ -86,7 +87,7 @@ and print_arg_list fmt = function
 and print_matching fmt = function
   | [] -> ()
   | (c, e)::t -> fprintf fmt "@[(@[%a@] -> @[%a@])@] @ %a"
-                   print_exp c print_exp e print_matching t
+                   print_const c print_exp e print_matching t
 
 and print_tuple_arg_list fmt = function
   | [] -> assert false
@@ -111,10 +112,10 @@ let print_base_type fmt = function
 let print_var_dec fmt (name, ty, clk) =
   match clk with
   | PBase -> fprintf fmt "%s : %a" name print_base_type ty
-  | PClk(cond, e) -> fprintf fmt "%s : %a when %a(%s)" name
+  | PClk(id, cond) -> fprintf fmt "%s : %a when %a(%s)" name
                        print_base_type ty
-                       print_exp e
-                       cond
+                       print_const cond
+                       id
 
 let print_var_dec_list = print_list print_var_dec ";"
 

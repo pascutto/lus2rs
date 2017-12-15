@@ -15,7 +15,7 @@ open Ast_types_lustre
 
 type tclock =
   | TBase
-  | TClk of Ident.t * t_expr
+  | TClk of Ident.t * const
 
 and decl_var = Ident.t * base_typ * tclock
 
@@ -28,7 +28,6 @@ and t_expr = {
 and t_expr_desc =
   | TE_const of const
   | TE_ident of Ident.t
-  | TE_if of t_expr * t_expr * t_expr
   | TE_binop of binop * t_expr * t_expr
   | TE_unop of unop * t_expr
   | TE_arrow of t_expr * t_expr
@@ -37,8 +36,8 @@ and t_expr_desc =
   | TE_prim of Ident.t * t_expr list (* ?? *)
   | TE_pre of t_expr
   | TE_current of t_expr
-  | TE_merge of Ident.t * (t_expr * t_expr) list
-  | TE_when of t_expr * t_expr * Ident.t
+  | TE_merge of Ident.t * (const * t_expr) list
+  | TE_when of t_expr * const * Ident.t
   | TE_tuple of t_expr list
 
 type t_patt = {

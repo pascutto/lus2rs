@@ -1,4 +1,5 @@
 open Ast_lustre
+open Ast_types_lustre
 
 module Epsilon = struct
   let consts = Hashtbl.create 5
@@ -22,17 +23,18 @@ and transform_expr_descr expr = match expr with
   | LSE_fby (e1, e2) -> LSE_fby (transform_expr e1, transform_expr e2)
   | LSE_pre e -> LSE_pre (transform_expr e)
   | LSE_current e -> LSE_current (transform_expr e)
-  | LSE_when (e1, e2, id) -> LSE_when (transform_expr e1, transform_expr e2, id)
+  | LSE_when (e1, e2, id) -> LSE_when (transform_expr e1, e2, id)
   | LSE_merge (id, ml) ->
     LSE_merge (id,
                List.map
-                 (fun (e1, e2) -> (transform_expr e1, transform_expr e2)) ml)
+                 (fun (c, e) -> (c, transform_expr e)) ml)
   | LSE_tuple (el) -> LSE_tuple (List.map transform_expr el)
-  | LSE_if (e1, e2, e3) ->
-    let e1 = transform_expr e1 in
+  | LSE_if (id, e2, e3) ->
     let e2 = transform_expr e2 in
     let e3 = transform_expr e3 in
-    LSE_if (e1, e2, e3)
+    LSE_merge (id,
+               [ ((Cbool true), e2);
+                 ((Cbool false), e3)])
 
 let transform_equation eq = { eq with lseq_expr = transform_expr eq.lseq_expr }
 

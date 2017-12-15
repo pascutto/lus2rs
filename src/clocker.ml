@@ -36,11 +36,9 @@ let print_const fmt = function
 
 let rec print_base_clock fmt = function
   | Base -> fprintf fmt "base"
-  | Clk(clk, id, cons) -> begin match cons.cexpr_desc with
-      | CE_const(c) -> fprintf fmt "(%a on %a(@[%a@]))"
-                         print_base_clock clk print_const c Ident.print id
-      | _ -> assert false
-    end
+  | Clk(clk, id, cons) ->
+    fprintf fmt "(%a on %a(@[%a@]))"
+      print_base_clock clk print_const cons Ident.print id
 
 let print_clock fmt = function
   | ([]) -> fprintf fmt "empty tuple"
@@ -67,7 +65,7 @@ let report fmt = function
 
 type signature =
   | CBase
-  | CClk of signature * int * c_expr
+  | CClk of signature * int * const
 
 let rec signature_from loc (pi, po) =
   let i = ref 0 in
@@ -167,25 +165,6 @@ and clock_expr_desc env loc = function
     else if sub clk2 clk1 then CE_binop (op, ce1, ce2), clk2
     else error loc (ExpectedSub(clk2, clk1))
 
-  | TE_if (e1, e2, e3) ->
-    let ce1 = clock_expr env e1 in
-    let clk1 = ce1.cexpr_clock in
-    let ce2 = clock_expr env e2 in
-    let clk2 = ce2.cexpr_clock in
-    let ce3 = clock_expr env e3 in
-    let clk3 = ce3.cexpr_clock in
-    let clk =
-    if sub clk1 clk2 then begin
-      if sub clk3 clk1 then clk3
-      else if sub clk1 clk3 then clk1
-      else error loc (ExpectedSub(clk3, clk1)) end
-    else if sub clk2 clk1 then begin
-      if sub clk3 clk2 then clk3
-      else if sub clk2 clk3 then clk2
-      else error loc (ExpectedSub(clk3, clk2)) end
-    else error loc (ExpectedSub(clk2, clk1))
-    in CE_if (ce1, ce1, ce2), clk
-
   | TE_app (f, el) ->
     let cel = List.map (clock_expr env) el in
     let celclk = List.flatten (List.map (fun x -> x.cexpr_clock) cel) in
@@ -230,15 +209,24 @@ and clock_expr_desc env loc = function
   | TE_when(e, cond, id) ->
     let ce = clock_expr env e in
     let ceclk = base_clock_of_clock ce.cexpr_loc ce.cexpr_clock in
-    let ccond = clock_expr env cond in
     let idclk = Gamma.find env id in
     if sub_base ceclk idclk
-    then CE_when(ce, ccond, id), [Clk(ceclk, id, ccond)]
+    then CE_when(ce, cond, id), [Clk(ceclk, id, cond)]
     else if sub_base idclk ceclk
-    then CE_when(ce, ccond, id), [Clk(ceclk, id, ccond)]
+    then CE_when(ce, cond, id), [Clk(ceclk, id, cond)]
     else error loc (ExpectedSub([idclk], [ceclk]))
 
-  | TE_merge(e, mat) -> assert false (* TODO *)
+  | TE_merge(id, mat) ->
+    let idck = Gamma.find env id in
+    let cmat = List.map (fun (c, e) -> c, clock_expr env e) mat in
+    let ok = List.for_all
+        (fun (c, e) -> sub ([Clk(idck, id, c)]) e.cexpr_clock)
+        cmat
+    in
+    if ok
+    then CE_merge (id, cmat), [idck]
+    else assert false
+
   | _ -> assert false
 
 and clock_args env loc params_clk el =
@@ -298,16 +286,7 @@ let add_vars_of_patt loc s {ceq_patt = {cpatt_desc = p}} =
 
 let tclk_to_clk = function
   | TBase -> Base
-  | TClk(clk, cond) -> begin match cond.texpr_desc with
-      | TE_const(c) -> let cond = {
-          cexpr_desc = CE_const(c);
-          cexpr_type = cond.texpr_type;
-          cexpr_clock = [Base];
-          cexpr_loc = cond.texpr_loc;
-        } in
-        Clk(Base, clk, cond)
-      | _ -> assert false
-  end
+  | TClk(clk, cond) -> Clk(Base, clk, cond)
 
 let clock_node n =
   let clock_decl = (fun (x, typ, tclk) -> (x, tclk_to_clk tclk)) in

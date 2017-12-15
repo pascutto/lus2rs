@@ -72,9 +72,6 @@ and print_exp_desc fmt = function
     fprintf fmt "@[(@[%a@]) @[%a@] (@[%a@])@]"
       print_exp e1 print_binop op print_exp e2
   | TE_unop (op, e) -> fprintf fmt "%a(%a)" print_unop op print_exp e
-  | TE_if (e1, e2, e3) ->
-    fprintf fmt "@[if (@[%a@]) then (@[%a@]) else (@[%a@])@]"
-      print_exp e1 print_exp e2 print_exp e3
   | TE_app (name, e_list) | TE_prim (name, e_list) ->
       fprintf fmt "%a(@[%a@])" Ident.print name print_arg_list e_list
   | TE_arrow (l, r) ->
@@ -85,7 +82,8 @@ and print_exp_desc fmt = function
       fprintf fmt "pre (@[%a@])" print_exp e
   | TE_current e ->
     fprintf fmt "current (@[%a@])" print_exp e
-  | TE_when (e, cond, clk) -> fprintf fmt "@[(@[%a@]) when @[%a@](@[%a@])@]" print_exp e print_exp cond Ident.print clk
+  | TE_when (e, cond, clk) -> fprintf fmt "@[(@[%a@]) when @[%a@](@[%a@])@]"
+                                print_exp e print_const cond Ident.print clk
   | TE_merge(clk,le) ->
     fprintf fmt "merge @[%a@] @[%a@]" Ident.print clk print_matching le
   | TE_tuple e_list ->
@@ -99,7 +97,7 @@ and print_arg_list fmt = function
 and print_matching fmt = function
   | [] -> ()
   | (c, e)::t -> fprintf fmt "@[(@[%a@] -> @[%a@])@] @ %a"
-                   print_exp c print_exp e print_matching t
+                   print_const c print_exp e print_matching t
 
 and print_tuple_arg_list fmt = function
   | [] -> assert false
@@ -119,11 +117,11 @@ let print_eq fmt eq =
 let print_var_dec fmt (name, ty, clk) =
   match clk with
   | TBase -> fprintf fmt "%a : %a" Ident.print name print_base_type ty
-  | TClk(cond, e) -> fprintf fmt "%a : %a when %a(%a)"
+  | TClk(id, cond) -> fprintf fmt "%a : %a when %a(%a)"
                        Ident.print name
                        print_base_type ty
-                       Ident.print cond
-                       print_exp e
+                       Ident.print id
+                       print_const cond
 
 let rec print_var_dec_list = print_list print_var_dec ";"
 

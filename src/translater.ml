@@ -37,7 +37,7 @@ let base_clock_of_clock = function
 
 let rec control ck instr = match ck with
   | Base -> instr
-  | Clk(clk, id, cond) -> control clk (OS_Case(id, [const_of_expr cond, instr]))
+  | Clk(clk, id, cond) -> control clk (OS_Case(id, [cond, instr]))
 
 let rec join s1 s2 = match s1, s2 with
   | OS_Case(id1, l1), OS_Case(id2, l2)
@@ -59,14 +59,13 @@ and trans_expr env e =
   | CE_binop (op, e1, e2) -> OE_Binop (op, trans_expr env e1, trans_expr env e2)
   | CE_when (e, cond, id) -> trans_expr env e
   | CE_current e -> trans_expr env e
-  | CE_if (_, _, _) -> assert false
   | e -> Format.eprintf "%a" Printer_clocked_ast.print_exp_desc e;
     assert false
 
 and trans_aux env x expr = match expr.cexpr_desc with
   | CE_merge (id, ml) ->
     OS_Case (id,
-             List.map (fun (c, e) -> const_of_expr c, trans_aux env x e) ml)
+             List.map (fun (c, e) -> c, trans_aux env x e) ml)
   | _ -> OS_Var_assign (x, trans_expr env expr)
 
 and trans_eq env eq =

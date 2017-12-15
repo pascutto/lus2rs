@@ -29,11 +29,9 @@ let rec print_base_type fmt = function
 
 and print_base_clock fmt = function
   | Base -> fprintf fmt "base"
-  | Clk (ck, id, cond) -> begin match cond.cexpr_desc with
-      | CE_const(c) -> fprintf fmt "(%a on %a(@[%a@]))"
-                         print_base_clock ck print_const c Ident.print id
-      | _ -> assert false
-    end
+  | Clk (ck, id, cond) ->
+    fprintf fmt "(%a on %a(@[%a@]))"
+      print_base_clock ck print_const cond Ident.print id
 
 let rec print_list f sep fmt = function
   | [] -> ()
@@ -80,9 +78,6 @@ and print_exp_desc fmt = function
     fprintf fmt "@[(@[%a@]) @[%a@] (@[%a@])@]"
       print_exp e1 print_binop op print_exp e2
   | CE_unop (op, e) -> fprintf fmt "%a(%a)" print_unop op print_exp e
-  | CE_if (e1, e2, e3) ->
-    fprintf fmt "@[if (@[%a@]) then (@[%a@]) else (@[%a@])@]"
-      print_exp e1 print_exp e2 print_exp e3
   | CE_app (name, e_list) | CE_prim (name, e_list) ->
       fprintf fmt "%a(@[%a@])" Ident.print name print_arg_list e_list
   | CE_arrow (l, r) ->
@@ -95,7 +90,7 @@ and print_exp_desc fmt = function
     fprintf fmt "current (@[%a@])" print_exp e
   | CE_when (e, cond, clk) ->
     fprintf fmt "@[(@[%a@]) when @[%a@](@[%a@])@]"
-      print_exp e print_exp cond Ident.print clk
+      print_exp e print_const cond Ident.print clk
   | CE_merge(clk,le) ->
     fprintf fmt "merge @[%a@] @[%a@]" Ident.print clk print_matching le
   | CE_tuple e_list ->
@@ -109,7 +104,7 @@ and print_arg_list fmt = function
 and print_matching fmt = function
   | [] -> ()
   | (c, e)::t -> fprintf fmt "@[(@[%a@] -> @[%a@])@] @ %a"
-                   print_exp c print_exp e print_matching t
+                   print_const c print_exp e print_matching t
 
 and print_tuple_arg_list fmt = function
   | [] -> assert false
@@ -132,7 +127,7 @@ let print_var_dec fmt (name, ty, clk) = match clk with
                        Ident.print name
                        print_base_type ty
                        print_base_clock ck
-                       print_exp cond
+                       print_const cond
                        Ident.print id
 
 let rec print_var_dec_list = print_list print_var_dec ";"

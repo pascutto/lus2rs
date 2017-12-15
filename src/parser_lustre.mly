@@ -91,7 +91,7 @@ local_param_list:
 param:
   | separated_nonempty_list(COMMA, IDENT) COLON typ
                                   { List.map (fun id -> (id, $3, PBase)) $1 }
-  | separated_nonempty_list(COMMA, IDENT) COLON typ WHEN const LPAR IDENT RPAR
+  | separated_nonempty_list(COMMA, IDENT) COLON typ WHEN raw_const LPAR IDENT RPAR
                                   {
                                     List.map
                                       (fun id -> (id, $3, PClk($7, $5)))
@@ -100,8 +100,8 @@ param:
   | separated_nonempty_list(COMMA, IDENT) COLON typ WHEN IDENT
                                   {
                                     List.map
-                                      (fun id -> (id, $3, PClk($5,
-                                        mk_expr (LSE_const(Cbool true)))))
+                                      (fun id ->
+                                        (id, $3, PClk($5, Cbool true)))
                                       $1
                                   }
 ;
@@ -124,7 +124,7 @@ expr:
   | IDENT                         { mk_expr (LSE_ident $1) }
   | IDENT LPAR separated_list(COMMA, expr) RPAR
                                   { mk_expr (LSE_app ($1, $3))}
-  | IF expr THEN expr ELSE expr   { mk_expr (LSE_if ($2, $4, $6)) }
+  | IF IDENT THEN expr ELSE expr  { mk_expr (LSE_if ($2, $4, $6)) }
   | expr FBY expr                 { mk_expr (LSE_fby ($1, $3)) }
   | expr PLUS expr                { mk_expr (LSE_binop (Op_add, $1, $3)) }
   | expr MINUS expr               { mk_expr (LSE_binop (Op_sub, $1, $3)) }
@@ -141,13 +141,11 @@ expr:
   | expr OR expr                  { mk_expr (LSE_binop (Op_or, $1, $3)) }
   | expr IMPL expr                { mk_expr (LSE_binop (Op_impl, $1, $3)) }
   | expr ARROW expr               { mk_expr (LSE_arrow ($1, $3)) }
-  | expr WHEN const LPAR IDENT RPAR
+  | expr WHEN raw_const LPAR IDENT RPAR
                                   { mk_expr (LSE_when ($1, $3, $5)) }
   | expr WHEN IDENT
                                   {
-                                    mk_expr (LSE_when ($1,
-                                      mk_expr (LSE_const (Cbool true)),
-                                    $3))
+                                    mk_expr (LSE_when ($1, Cbool true, $3))
                                   }
   | MERGE IDENT matching+         { mk_expr (LSE_merge ($2, $3)) }
   | MINUS expr                    { mk_expr (LSE_unop (Op_uminus, $2)) }
@@ -158,13 +156,17 @@ expr:
                                   { mk_expr (LSE_tuple ($2::$4)) }
 ;
 
-matching: LPAR const ARROW expr RPAR
+matching: LPAR raw_const ARROW expr RPAR
                                   { $2, $4 }
 
 const:
-  | BOOL_CONST                    { mk_expr (LSE_const (Cbool $1)) }
-  | INT_CONST                     { mk_expr (LSE_const (Cint $1)) }
-  | REAL_CONST                    { mk_expr (LSE_const (Creal $1)) }
+  raw_const                       { mk_expr (LSE_const $1) }
+;
+
+raw_const:
+  | BOOL_CONST                    { Cbool $1 }
+  | INT_CONST                     { Cint $1 }
+  | REAL_CONST                    { Creal $1 }
 ;
 
 typ:

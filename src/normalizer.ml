@@ -82,12 +82,6 @@ let rec normalize ctx e =
     in
     (x_decl@new_vars, x_eq::new_eqs), x_expr
 
-  | CE_if(e1,e2,e3) ->
-    let ctx, e1' = normalize ctx e1 in
-    let ctx, e2' = normalize ctx e2 in
-    let ctx, e3' = normalize ctx e3 in
-    ctx, { e with cexpr_desc = CE_if(e1',e2',e3') }
-
   | CE_tuple l ->
     let ctx, l' = normalize_list ctx l in
     ctx, { e with cexpr_desc = CE_tuple l'}
@@ -114,7 +108,17 @@ let rec normalize ctx e =
     let ctx, e' = normalize ctx e in
     ctx, {e with cexpr_desc = CE_when(e', cond, clk)}
 
-  | CE_merge (id, le) -> assert false
+  | CE_merge (id, le) ->
+    (* let (new_vars,new_eqs), e1' = List.fold_left
+        (fun acc (c, e) -> (normalize ctx e) :: acc) [] el in
+  let x_decl, x_patt, x_expr = new_pat e in
+  let x_eq =
+    { ceq_patt = x_patt;
+      ceq_expr = { e with cexpr_desc = CE_current e1' }; }
+  in
+  (x_decl@new_vars, x_eq::new_eqs), x_expr *)
+    let ctx, le' = normalize_matching ctx le in
+    ctx, { e with cexpr_desc = CE_merge (id, le')}
 
   | CE_arrow (c,e1) ->
     let (new_vars,new_eqs), e1' = normalize ctx e1 in
@@ -140,6 +144,14 @@ and normalize_list ctx l =
       (fun (ctx,l) e ->
 	let ctx, e' = normalize ctx e in
 	ctx, e'::l ) (ctx,[]) l
+  in ctx, List.rev l
+
+and normalize_matching ctx l =
+  let ctx, l =
+    List.fold_left
+      (fun (ctx, l) (c, e) ->
+         let c, (ctx, e') = c, normalize ctx e in
+         ctx, (c, e')::l ) (ctx, []) l
   in ctx, List.rev l
 
 let normalize_equation node e =

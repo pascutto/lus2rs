@@ -34,7 +34,6 @@ type error =
   | FlatTuple
   | UndefinedOutputs of string list
   | InputVar of string
-  | BadMain of typ * typ
 
 exception Error of location * error
 
@@ -64,7 +63,7 @@ let report fmt = function
       print_type t1 print_type t2
   | ExpectedPattern typ ->
       fprintf fmt "this pattern is expected to have type %a"
-	print_type typ
+        print_type typ
   | ExpectedBase typ ->
       fprintf fmt
      "this expression has type %a but is expected to have a type simple type"
@@ -83,10 +82,6 @@ let report fmt = function
       fprintf fmt "those output variables are undefined:%a"
 	(fun fmt -> List.iter (fun x -> fprintf fmt "%s " x)) l
   | InputVar s -> fprintf fmt "%s is an input variable" s
-  | BadMain (t_in, t_out) ->
-      fprintf fmt "The main node has type %a -> %a but is expected to have type %a -> bool"
-	print_type t_in print_type t_out
-        print_type t_in
 
 let int_of_real = Ident.make "int_of_real" Ident.Prim
 let real_of_int = Ident.make "real_of_int" Ident.Prim
@@ -200,6 +195,11 @@ let type_const = function
   | Cint _ -> [Tint]
   | Creal _ -> [Treal]
 
+let rec all_same loc = function
+  | [] -> assert false
+  | [x] -> x
+  | h::t -> if all_same loc t = h then h else error loc (ExpectedPattern h)
+
 let rec type_expr env e =
   let desc,t = type_expr_desc env e.pexpr_loc e.pexpr_desc in
   { texpr_desc = desc; texpr_type = t; texpr_loc = e.pexpr_loc; }
@@ -284,14 +284,7 @@ and type_expr_desc env loc = function
       | _ -> error loc (Other "invalid operands to comparison")
       end
 
-  | LSE_if (e1, e2, e3) ->
-      let te1 = expected_type env e1 ([Tbool]) in
-      let te2 = type_expr env e2 in
-      let te3 = type_expr env e3 in
-      if compatible te2.texpr_type te3.texpr_type then
-        let tt = te2.texpr_type in
-        TE_if(te1, te2, te3), tt
-      else error loc (ExpectedType (te3.texpr_type, te2.texpr_type))
+  | LSE_if (e1, e2, e3) -> assert false
 
   | LSE_app (f, el) -> begin
     try
@@ -337,19 +330,29 @@ and type_expr_desc env loc = function
     (List.map (fun e -> base_typ_of_ty e.texpr_loc e.texpr_type) tel)
 
   | LSE_when(e, cond, clk) ->
-    let tecond, idclk = type_when env cond clk in
+    let idclk = type_when loc env cond clk in
     let te = type_expr env e in
     let ty = te.texpr_type in
-    TE_when (te, tecond, idclk), ty
+    TE_when (te, cond, idclk), ty
 
-  | LSE_merge(e, mat) -> assert false (* TODO *)
+  | LSE_merge(id, mat) -> begin
+      let tout = List.map (fun (c, e) -> type_expr env e) mat in
+let tin = List.map (fun (c, e) -> type_const c) mat in
+      let tyo = all_same loc (List.map (fun x -> x.texpr_type) tout) in
+      let tmat = List.combine (List.map fst mat) tout in
+      let als = all_same loc tin in
+let tid, tyid, _ = Gamma.find loc env id in
+let tyi = als in
+      if compatible tyi [tyid] then
+  TE_merge(tid, tmat), tyo
+else error loc (ExpectedType (tyi, als))
+  end
 
-and type_when env cond clk =
-  let tecond = type_expr env cond in
-  let tycond = tecond.texpr_type in
-  let idclk, tyclk, _ = Gamma.find tecond.texpr_loc env clk in
-  if compatible tycond [tyclk] then (tecond, idclk)
-  else error tecond.texpr_loc (ExpectedType (tycond, [tyclk]))
+and type_when loc env cond clk =
+  let tycond = type_const cond in
+  let idclk, tyclk, _ = Gamma.find loc env clk in
+  if compatible tycond [tyclk] then idclk
+  else error loc (ExpectedType (tycond, [tyclk]))
 
 
 and type_args env loc params_ty el =
@@ -367,7 +370,6 @@ and type_args env loc params_ty el =
   in
   if well_typed then tel
   else error loc (ExpectedType (actual_types, params_ty));
-
 
 and expected_type env e tt =
   let te = type_expr env e in
@@ -435,8 +437,8 @@ let type_node n =
       let tclk = match clk with
         | PBase -> TBase
         | PClk(clk, cond) -> begin
-            let tecond, teclk = type_when env cond clk in
-            TClk(teclk, tecond)
+            let teclk = type_when n.lsn_loc env cond clk in
+            TClk(teclk, cond)
           end in
       (x', typ, tclk) in
   let input =

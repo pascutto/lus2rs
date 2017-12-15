@@ -8,7 +8,7 @@ compile:
 	(cd src; $(MAKE))
 
 test:
-	(./auto_test.sh src/lus2rs)
+	(./auto_test.sh src/lus2rs -v)
 
 clean:
 	(cd src; $(MAKE) clean)
