@@ -39,7 +39,6 @@ type error =
   | BadMain of typ * typ
 
 exception Error of location * error
-let dummy_loc = Lexing.dummy_pos, Lexing.dummy_pos
 
 let error loc e = raise (Error (loc, e))
 let errors loc s = error loc (Other s)

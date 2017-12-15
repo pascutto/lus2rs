@@ -112,7 +112,6 @@ module Gamma = struct
   let empty = M.empty
   let add env x clk = M.add x clk env
   let adds = List.fold_left (fun env (x, clk) -> add env x clk)
-      (* TODO Clocks of new variables *)
   let find env x = M.find x env
 end
 
@@ -292,7 +291,7 @@ and clock_patt_desc env loc patt =
 let clock_equation env eq =
   let patt = clock_patt env eq.teq_patt in
   let expr = clock_expr env eq.teq_expr in
-  let well_clocked = sub expr.cexpr_clock patt.cpatt_clock in
+  let well_clocked = expr.cexpr_clock = patt.cpatt_clock in
   if well_clocked then
     { ceq_patt = patt; ceq_expr = expr; }
   else
@@ -323,22 +322,10 @@ let clock_node n =
   let in_clk = List.map clock_decl n.tn_input in
   let env = Gamma.adds Gamma.empty (out_clk@loc_clk@in_clk) in
   let equs = List.map (clock_equation env) n.tn_equs in
-
-  let input =
-    List.map
-      (fun (x, typ, clk) -> let clk = Gamma.find env x in (x, typ, clk))
-      n.tn_input
-  in
-  let output =
-    List.map
-      (fun (x, typ, clk) -> let clk = Gamma.find env x in (x, typ, clk))
-      n.tn_output
-  in
-  let local =
-    List.map
-      (fun (x, typ, clk) -> let clk = Gamma.find env x in (x, typ, clk))
-      n.tn_local
-  in
+  let aux = fun (x, typ, clk) -> let clk = Gamma.find env x in (x, typ, clk) in
+  let input = List.map aux n.tn_input in
+  let output = List.map aux n.tn_output in
+  let local = List.map aux n.tn_local in
   let c_in = List.map (fun (_, _, clk) -> clk ) input in
   let c_out = List.map (fun (_, _, clk) -> clk) output in
   Delta.add n.tn_name (c_in, c_out);
@@ -352,12 +339,10 @@ let clock_node n =
 let clock_constant c =
   let cexpr = clock_expr Gamma.empty c.tc_desc in
   Epsilon.add c.tc_name Base;
-  {
-    cc_name = c.tc_name;
+  { cc_name = c.tc_name;
     cc_desc = cexpr;
     cc_type = cexpr.cexpr_type;
-    cc_clock = [Base];
-  }
+    cc_clock = [Base]; }
 
 let clock_element = function
   | T_Node n -> C_Node(clock_node n)
