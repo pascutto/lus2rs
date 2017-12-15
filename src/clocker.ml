@@ -23,8 +23,10 @@ type error =
   | ExpectedSub of clock * clock
   | ExpectedSimple of clock
   | ExpectedSame
+  | UnboundVar of Ident.t
 
 exception Error of location * error
+let dummy_loc = Lexing.dummy_pos, Lexing.dummy_pos
 let error loc e = raise (Error (loc, e))
 
 let print_const fmt = function
@@ -61,50 +63,53 @@ let report fmt = function
   | ExpectedSame ->
     fprintf fmt
       "These expressions are supposed to be on the same clock."
+  | UnboundVar id -> fprintf fmt "unbound variable %a in node clock declaration" Ident.print id
 
 type signature =
   | CBase
   | CClk of signature * int * c_expr
 
-let rec signature_from (cki, cko) =
+let rec signature_from loc (pi, po) =
   let i = ref 0 in
   let fresh() = (incr i; !i) in
   let vars = Hashtbl.create 5 in
   let rec aux = function
-    | Base -> CBase
-    | Clk(clk, id, cond) ->
-      let sclk = aux clk in
-      let sid = try Hashtbl.find vars id
-        with Not_found -> (let sid = fresh() in Hashtbl.add vars id sid; sid)
-      in
-      CClk(sclk, sid, cond)
+    | ident, t, Base -> Hashtbl.add vars ident (fresh()); CBase
+    | ident, t, (Clk(clk, id, cond)) ->
+      let sclk = aux (ident, t, clk) in
+      try
+        let sid = Hashtbl.find vars id in CClk(sclk, sid, cond)
+      with Not_found -> error loc (UnboundVar id)
   in
-  List.map aux cki, List.map aux cko
+  let scki = List.map aux pi in
+  let scko = List.map aux po in
+  scki, scko
 
-let satisfy_signature clki (signi, signo) =
+let satisfy_signature pi (signi, signo) =
   let vars = Hashtbl.create 5 in
   let rec aux acc ck sg = match ck, sg with
     | _, CBase -> acc
     | Clk(clk, id, cond), CClk(sclk, sid, scond) when cond = scond -> begin
       if aux acc clk sclk then try
         Hashtbl.find vars sid = id
-        with Not_found -> (Hashtbl.add vars sid id; acc)
+        with Not_found -> (Hashtbl.replace vars sid id; acc)
       else false
     end
     | _ -> false
   in
   let rec replace = function
     | CBase -> Base
-    | CClk(sclk, sid, cond) -> let id = Hashtbl.find vars sid in
-      Clk(replace sclk, id, cond)
+    | CClk(sclk, sid, cond) -> try
+      let id = Hashtbl.find vars sid in Clk(replace sclk, id, cond)
+    with  | Not_found -> assert false
   in
-  if List.fold_left2 aux true clki signi then List.map replace signo
+  if List.fold_left2 aux true pi signi then List.map replace signo
   else assert false
 
 module Delta = struct
   let nodes = Hashtbl.create 5
   let find x clki = satisfy_signature clki (Hashtbl.find nodes x)
-  let add x (clki, clko) = Hashtbl.replace nodes x (signature_from (clki, clko))
+  let add x loc (clki, clko) = Hashtbl.replace nodes x (signature_from loc (clki, clko))
 end
 
 module Gamma = struct
@@ -326,9 +331,7 @@ let clock_node n =
   let input = List.map aux n.tn_input in
   let output = List.map aux n.tn_output in
   let local = List.map aux n.tn_local in
-  let c_in = List.map (fun (_, _, clk) -> clk ) input in
-  let c_out = List.map (fun (_, _, clk) -> clk) output in
-  Delta.add n.tn_name (c_in, c_out);
+  Delta.add n.tn_name n.tn_loc (input, output);
   { cn_name = n.tn_name;
     cn_input = input;
     cn_output = output;
