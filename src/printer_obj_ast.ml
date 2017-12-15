@@ -20,13 +20,6 @@ let rec print_list f sep fmt = function
   | [x] -> f fmt x
   | h :: t -> fprintf fmt "%a%s@ %a" f h sep (print_list f sep) t
 
-let rec print_ls_patt_desc fmt = print_list (fun x -> fprintf fmt "%s") "," fmt
-
-let rec print_list_eol f sep fmt = function
-  | [] -> ()
-  | [x] -> fprintf fmt "%a%s" f x sep
-  | h :: t -> fprintf fmt "%a%s@\n%a" f h sep (print_list_eol f sep) t
-
 let print_const fmt = function
   | Cbool b -> fprintf fmt "%b" b
   | Cint i -> fprintf fmt "%d" i
@@ -93,11 +86,6 @@ and print_tuple_list fmt = function
   | [] -> ()
   | [x] -> fprintf fmt "%a" Ident.print x
   | h :: t -> fprintf fmt "%a,@ %a" Ident.print h print_tuple_list t
-
-and print_const_exp fmt = function
-  | [] -> assert false
-  | [c] -> fprintf fmt "%a" print_const c
-  | h :: t -> fprintf fmt "%a,@ %a" print_const h print_const_exp t
 
 let print_base_type fmt = function
   | Tbool -> fprintf fmt "bool"
