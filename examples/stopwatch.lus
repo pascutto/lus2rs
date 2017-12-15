@@ -2,9 +2,11 @@ node simple_stopwatch
   (time_unit: bool; reset, start_stop: bool)
 returns
   (time: int; running: bool);
+var aux: bool;
 let
+  aux = running and time_unit;
   time = 0 -> if reset then 0
-              else if running and time_unit then pre(time)+1
+              else if aux then pre(time)+1
               else pre(time);
   running = false -> if start_stop then not pre(running)
                      else pre(running);
