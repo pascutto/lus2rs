@@ -16,6 +16,9 @@ open Ast_obj
 
 module M = Map.Make(Ident)
 
+let i = ref 0
+let new_obj() = incr i; !i
+
 let rec const_of_expr e =
   match e.cexpr_desc with
   | CE_const c -> c
@@ -66,6 +69,7 @@ and trans_aux env x expr = match expr.cexpr_desc with
   | CE_merge (id, ml) ->
     OS_Case (id,
              List.map (fun (c, e) -> c, trans_aux env x e) ml)
+  | CE_arrow (e1, e2) -> assert false
   | _ -> OS_Var_assign (x, trans_expr env expr)
 
 and trans_eq env eq =
@@ -98,7 +102,17 @@ and trans_eq env eq =
                                 (OS_State_assign (x, c))) in
       newm, newsi, j, d, news
     end
-  | CE_app (f, el) -> assert false
+  | CE_app (f, el) ->
+    let c = List.map (trans_expr env) el in
+    let o = new_obj() in
+    let newsi = OS_Sequence (si, OS_Reset(o)) in
+    let newj = (o, f) :: j in
+    let news = OS_Sequence (s,
+                            control
+                              (base_clock_of_clock expr.cexpr_clock)
+                              (OS_Step (patt.cpatt_desc, o, c)))
+    in
+    m, newsi, newj, d, news
   | _ ->
     let x = List.hd patt.cpatt_desc in
     let news = OS_Sequence (s,
@@ -115,11 +129,11 @@ and trans_node n =
       M.empty
       (n.cn_local@n.cn_input@n.cn_output) in
   let m, si, j, d, s =
-    trans_eq_list (M.empty, OS_Skip, M.empty, initr, OS_Skip) n.cn_equs in
+    trans_eq_list (M.empty, OS_Skip, [], initr, OS_Skip) n.cn_equs in
   {
     oc_name = n.cn_name;
     oc_mem = M.bindings m;
-    oc_instances = M.bindings j;
+    oc_instances = j;
     oc_reset = si;
     oc_step =
       List.map (fun (id, t, clk) -> id, t) n.cn_input,

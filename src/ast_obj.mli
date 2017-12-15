@@ -27,11 +27,11 @@ and o_statement =
   | OS_State_assign of Ident.t * o_expr
   | OS_Sequence of o_statement * o_statement
   | OS_Skip
-  | OS_Reset of Ident.t
-  | OS_Step of Ident.t list * Ident.t * o_expr list
+  | OS_Reset of int
+  | OS_Step of Ident.t list * int * o_expr list
   | OS_Case of Ident.t * (const * o_statement) list
 
-type o_inst = Ident.t * Ident.t
+type o_inst = int * Ident.t
 
 and o_class = {
   oc_name: Ident.t;
@@ -40,12 +40,3 @@ and o_class = {
   oc_reset: o_statement;
   oc_step: o_patt list * o_patt list * o_patt list * o_statement
 }
-
-type o_const = {
-  oc_name: Ident.t;
-  oc_value: const
-}
-
-type o_element =
-  | Oclass of o_class
-  | Oconst of o_const

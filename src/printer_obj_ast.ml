@@ -60,17 +60,16 @@ and print_statement fmt = function
   | OS_Sequence (s1, s2) ->
     fprintf fmt "@[@[%a;@]@\n @[%a@]@]" print_statement s1 print_statement s2
   | OS_Skip -> fprintf fmt "skip"
-  | OS_Reset id -> fprintf fmt "@[%a.reset()@]" Ident.print id
+  | OS_Reset id -> fprintf fmt "@[%i.reset()@]" id
   | OS_Step (idl, id, el) ->
-    fprintf fmt "@[@[(%a)@] = [@%a.(@[%a@])@]@]"
+    fprintf fmt "@[@[(%a)@] = @[%i.step(@[%a@])@]@]"
       print_tuple_list idl
-      Ident.print id
+      id
       print_arg_list el
   | OS_Case (id, csl) ->
     fprintf fmt "@[case (@[%a@]) @{%a@}@]"
       Ident.print id
       print_matching csl
-
 
 and print_arg_list fmt = function
   | [] -> ()
@@ -95,7 +94,12 @@ let print_base_type fmt = function
 let print_var_dec fmt (name, ty) =
   fprintf fmt "%a : %a" Ident.print name print_base_type ty
 
+let print_instance fmt (id, cl) =
+  fprintf fmt "@[%i : %a@]" id Ident.print cl
+
 let print_var_dec_list = print_list print_var_dec ";"
+
+let print_instance_list = print_list print_instance ","
 
 let print_class fmt c =
   let inp, out, loc, st = c.oc_step in
@@ -103,7 +107,7 @@ let print_class fmt c =
     "@[machine %a =@\nmemory [@[%a@]]@\ninstances [@[%a@]]@\nreset() = @[%a@]@\n@[step (@[%a@])@] @[returns (@[%a@])@] = @[var @[%a;@]@] in @[<v 2>@[%a@]@]@]"
     Ident.print c.oc_name
     print_var_dec_list c.oc_mem
-    print_var_dec_list [] (* c.oc_instances *)
+    print_instance_list c.oc_instances
     print_statement c.oc_reset
     print_var_dec_list inp
     print_var_dec_list out
