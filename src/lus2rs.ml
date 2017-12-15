@@ -78,6 +78,17 @@ let () =
       Format.printf "/**************************************/@.";
       Printer_ast.print_program f
     end;
+
+    (* Sugar elimination *)
+    let fsu = Sugar.transform f in
+    close_in c;
+    if !verbose then begin
+      Format.printf "/**************************************/@.";
+      Format.printf "/*       Parsed ast (sugarless)       */@.";
+      Format.printf "/**************************************/@.";
+      Printer_ast.print_program fsu
+    end;
+
     if !parse_only then exit 0;
 
     (* Typing *)
