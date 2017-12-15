@@ -65,15 +65,4 @@ type c_node = {
   cn_loc: location;
 }
 
-type c_constant = {
-  cc_name: Ident.t;
-  cc_desc: c_expr;
-  cc_type: typ;
-  cc_clock: clock;
-}
-
-type c_element =
-  | C_Node of c_node
-  | C_Constant of c_constant
-
-type c_file = c_element list
+type c_file = c_node list

@@ -54,8 +54,8 @@ let schedule_equs nloc inputs equs =
   let g =
     List.fold_left
       (fun g eq ->
-         let vp = S.diff (add_vars_of_patt S.empty eq.ceq_patt) !consts in
-         let ve = S.diff(add_vars_of_exp S.empty eq.ceq_expr) !consts in
+         let vp = add_vars_of_patt S.empty eq.ceq_patt in
+         let ve = add_vars_of_exp S.empty eq.ceq_expr in
       	S.fold (fun x g -> Graph.add (x, ve, eq) g) vp g)
       Graph.empty equs
   in
@@ -96,13 +96,5 @@ let schedule_node n =
   let equs = schedule_equs n.cn_loc n.cn_input n.cn_equs in
   { n with cn_equs = equs; }
 
-let schedule_constant c =
-  consts := C.add c.cc_name !consts;
-  c
-
-let schedule_element = function
-  | C_Node n -> C_Node(schedule_node n)
-  | C_Constant c -> C_Constant(schedule_constant c)
-
 let schedule =
-  List.map schedule_element
+  List.map schedule_node

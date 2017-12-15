@@ -25,12 +25,10 @@ type error =
   | ExpectedBase of typ
   | ExpectedNum of typ
   | UnboundVar of string
-  | UnboundConst of string
   | UnboundNode of string
   | TooFewArguments
   | TooManyArguments
   | Clash of string
-  | ClashConst of string
   | ConstantExpected
   | Other of string
   | FlatTuple
@@ -59,7 +57,6 @@ let print_type fmt = function
 
 let report fmt = function
   | UnboundVar id -> fprintf fmt "unbound variable %s" id
-  | UnboundConst id -> fprintf fmt "unbound const %s" id
   | UnboundNode id -> fprintf fmt "unbound node %s" id
   | ExpectedType (t1,t2) ->
       fprintf fmt
@@ -77,7 +74,6 @@ let report fmt = function
       "this expression has type %a but is expected to have type int or real"
       print_type typ
   | Clash id -> fprintf fmt "The variable %s is defined several times" id
-  | ClashConst id -> fprintf fmt "The constant %s is defined several times" id
   | TooFewArguments -> fprintf fmt "too few arguments"
   | TooManyArguments -> fprintf fmt "too many arguments"
   | ConstantExpected -> fprintf fmt "this expression sould be a constant"
@@ -115,21 +111,6 @@ module Delta = struct
     x'
 
   let save () = Hashtbl.fold (fun key (_, typ) env -> (key,typ)::env) nodes []
-end
-
-module Epsilon = struct
-
-  let consts = Hashtbl.create 97
-
-  let find loc c =
-    try Hashtbl.find consts c with
-      Not_found -> error loc (UnboundConst c)
-
-  let add loc x t =
-    if Hashtbl.mem consts x then error loc (ClashConst x);
-    let x' = Ident.make x Ident.Stream in
-    Hashtbl.add consts x (x', t);
-    x'
 end
 
 type io = Vinput | Vpatt
@@ -227,14 +208,9 @@ and type_expr_desc env loc = function
   | LSE_const c ->
       TE_const c , type_const c
 
-  | LSE_ident x -> begin
-    try
+  | LSE_ident x ->
       let x, typ, _ = Gamma.find loc env x in
       TE_ident x , [typ]
-    with _ ->
-      let x, typ = Epsilon.find loc x in
-      TE_ident x , [typ]
-    end
 
   | LSE_unop (Op_not, e) ->
       let tt = [Tbool] in
@@ -482,17 +458,14 @@ let type_node n =
   in
   node
 
-let type_constant c =
-  let texpr = type_expr Gamma.empty c.lsc_desc in
-  let name = Epsilon.add c.lsc_desc.pexpr_loc c.lsc_name (List.hd texpr.texpr_type) in
-  {
-    tc_name = name;
-    tc_desc = texpr;
-    tc_type = texpr.texpr_type;
-  }
+let only_nodes ln =
+  let rec aux l = function
+    | [] -> l
+    | h::t -> begin match h with
+        | LS_Node n -> aux (n::l) t
+        | LS_Constant _ -> aux l t
+      end
+  in
+  List.rev (aux [] ln)
 
-let type_element = function
-  | LS_Node n -> T_Node(type_node n)
-  | LS_Constant c -> T_Constant(type_constant c)
-
-let type_program f = List.map type_element f
+let type_program f = List.map type_node (only_nodes f)

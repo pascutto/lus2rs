@@ -67,8 +67,4 @@ type t_constant = {
   tc_type: typ;
 }
 
-type t_element =
-  | T_Node of t_node
-  | T_Constant of t_constant
-
-type t_file = t_element list
+type t_file = t_node list

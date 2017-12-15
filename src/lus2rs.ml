@@ -92,7 +92,7 @@ let () =
     if !parse_only then exit 0;
 
     (* Typing *)
-    let ft = Typer.type_program f in
+    let ft = Typer.type_program fsu in
     if !verbose then begin
       Format.printf "/**************************************/@.";
       Format.printf "/*             Typed ast              */@.";

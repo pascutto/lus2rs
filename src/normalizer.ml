@@ -154,8 +154,4 @@ let normalize_node = function n ->
   in
   { n with cn_equs = List.rev n.cn_equs }
 
-let normalize_element = function
-  | C_Node n -> C_Node(normalize_node n)
-  | C_Constant c -> C_Constant c
-
-let normalize_file = List.map normalize_element
+let normalize_file = List.map normalize_node

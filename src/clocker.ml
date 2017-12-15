@@ -120,12 +120,6 @@ module Gamma = struct
   let find env x = M.find x env
 end
 
-module Epsilon = struct
-  let consts = Hashtbl.create 5
-  let find = Hashtbl.find consts
-  let add x clk = Hashtbl.add consts x clk
-end
-
 let base_clock_of_clock loc = function
   | [c] -> c
   | e -> error loc (ExpectedSimple e)
@@ -156,11 +150,9 @@ let rec clock_expr env e =
 and clock_expr_desc env loc = function
   | TE_const c -> CE_const c , [Base]
 
-  | TE_ident x -> begin
-    let clk = try Gamma.find env x
-    with _ -> Epsilon.find x in
+  | TE_ident x ->
+    let clk = Gamma.find env x in
     CE_ident x , [clk]
-    end
 
   | TE_unop (op, e) ->
     let ce = clock_expr env e in
@@ -239,10 +231,7 @@ and clock_expr_desc env loc = function
     let ce = clock_expr env e in
     let ceclk = base_clock_of_clock ce.cexpr_loc ce.cexpr_clock in
     let ccond = clock_expr env cond in
-    let idclk =
-      try
-        Gamma.find env id
-      with _ -> Epsilon.find id in
+    let idclk = Gamma.find env id in
     if sub_base ceclk idclk
     then CE_when(ce, ccond, id), [Clk(ceclk, id, ccond)]
     else if sub_base idclk ceclk
@@ -339,17 +328,5 @@ let clock_node n =
     cn_equs = equs;
     cn_loc = n.tn_loc; }
 
-let clock_constant c =
-  let cexpr = clock_expr Gamma.empty c.tc_desc in
-  Epsilon.add c.tc_name Base;
-  { cc_name = c.tc_name;
-    cc_desc = cexpr;
-    cc_type = cexpr.cexpr_type;
-    cc_clock = [Base]; }
-
-let clock_element = function
-  | T_Node n -> C_Node(clock_node n)
-  | T_Constant c -> C_Constant(clock_constant c)
-
 let clock_program ndl  =
-  List.map clock_element ndl
+  List.map clock_node ndl

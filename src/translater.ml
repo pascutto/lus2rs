@@ -107,3 +107,6 @@ and trans_node n =
       M.bindings d,
       join_list s;
   }
+
+let translate =
+  List.map trans_node

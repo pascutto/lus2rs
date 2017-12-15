@@ -146,20 +146,10 @@ let print_node fmt nd =
     print_var_dec_list nd.cn_local
     (print_list_eol print_eq ";") nd.cn_equs
 
-let print_constant fmt cst =
-  fprintf fmt "@[const (%a) = @[%a;@]@]"
-    Ident.print cst.cc_name
-    print_exp cst.cc_desc
-
-let print_element fmt = function
-  | C_Node(n) -> print_node fmt n
-  | C_Constant(c) -> print_constant fmt c
-
-
 let print_program ndl =
   verbose := false;
-  List.iter (fun nd -> Format.printf "%a@\n@." print_element nd) ndl
+  List.iter (fun nd -> Format.printf "%a@\n@." print_node nd) ndl
 
 let print_program_v ndl =
   verbose := true;
-  List.iter (fun nd -> Format.printf "%a@\n@." print_element nd) ndl
+  List.iter (fun nd -> Format.printf "%a@\n@." print_node nd) ndl
