@@ -23,8 +23,9 @@ let usage = "usage: "^Sys.argv.(0)^" [options] file.lus main"
 let parse_only = ref false
 let type_only = ref false
 let clock_only = ref false
-let schedule_only = ref false
 let norm_only = ref false
+let schedule_only = ref false
+let obj_only = ref false
 let verbose = ref false
 
 let spec =
@@ -38,6 +39,8 @@ let spec =
    "-s", Arg.Set schedule_only, "  stops after scheduling";
    "--norm-only", Arg.Set norm_only, "  stops after normalization";
    "-n", Arg.Set norm_only, "  stops after normalization";
+   "--obj-only", Arg.Set obj_only, "  stops after obj translation";
+   "-o", Arg.Set obj_only, "  stops after obj translation";
    "--verbose", Arg.Set verbose, "print intermediate transformations";
    "-v", Arg.Set verbose, "print intermediate transformations";
   ]
@@ -130,6 +133,16 @@ let () =
       Printer_clocked_ast.print_program fs
     end;
     if !schedule_only then exit 0;
+
+    (* Transforming *)
+    let fo = Translater.translate fs in
+    if !verbose then begin
+      Format.printf "/**************************************/@.";
+      Format.printf "/*             Object ast             */@.";
+      Format.printf "/**************************************/@.";
+      Printer_obj_ast.print_program fo
+    end;
+    if !obj_only then exit 0;
 
   with
     | Lexing_error s ->

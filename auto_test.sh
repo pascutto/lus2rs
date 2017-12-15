@@ -159,6 +159,34 @@ part5 () {
   echo
 }
 
+part6 () {
+  score=0
+  max=0
+
+  echo
+  echo "Part 6: Translating"
+
+  for f in examples/*.lus; do
+    echo -n ".";
+    max=`expr $max + 1`;
+    compile --obj-only $f;
+    case $? in
+  	"1")
+    	echo
+    	echo "FAIL on "$f" (should have been accepted)";;
+  	"0") score=`expr $score + 1`;;
+  	*)
+    	echo
+      echo "COMPILER FAIL on "$f"";;
+    esac
+  done
+  echo
+
+  percent=`expr 100 \* $score / $max`;
+  echo -n "Translating: $score/$max : $percent%";
+  echo
+}
+
 case $2  in
     "-v")
       verbose=1;
@@ -166,12 +194,14 @@ case $2  in
       part2;
       part3;
       part4;
-      part5;;
+      part5;
+      part6;;
     *)
       part1;
       part2;
       part3;
       part4;
-      part5;;
+      part5;
+      part6;;
 esac
 echo

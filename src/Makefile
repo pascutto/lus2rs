@@ -1,4 +1,4 @@
-CMO=lexer_lustre.cmo parser_lustre.cmo ident.cmo printer_ast.cmo sugar.cmo typer.cmo printer_typed_ast.cmo clocker.cmo printer_clocked_ast.cmo normalizer.cmo scheduler.cmo translater.cmo lus2rs.cmo
+CMO=lexer_lustre.cmo parser_lustre.cmo ident.cmo printer_ast.cmo sugar.cmo typer.cmo printer_typed_ast.cmo clocker.cmo printer_clocked_ast.cmo normalizer.cmo scheduler.cmo translater.cmo printer_obj_ast.cmo lus2rs.cmo
 GENERATED = lexer_lustre.ml parser_lustre.ml parser_lustre.mli
 BIN=lus2rs
 FLAGS=

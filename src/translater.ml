@@ -53,6 +53,7 @@ and trans_expr env e =
   | CE_binop (op, e1, e2) -> OE_Binop (op, trans_expr env e1, trans_expr env e2)
   | CE_when (e, cond, id) -> trans_expr env e
   | CE_current e -> trans_expr env e
+  | CE_if (_, _, _) -> assert false
   | _ -> assert false
 
 and trans_aux env x expr = match expr.cexpr_desc with
