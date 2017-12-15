@@ -11,8 +11,6 @@ Clément PASCUTTO <clement.pascutto@ens.fr
 ########
 *)
 
-(* FIXME : Add correct subtyping *)
-
 open Ast_types_lustre
 open Ast_typed_lustre
 open Ast_clocked_lustre
@@ -23,12 +21,10 @@ module M = Map.Make(Ident)
 
 type error =
   | ExpectedSub of clock * clock
-  | ExpectedBase of clock
+  | ExpectedSimple of clock
   | ExpectedSame
 
 exception Error of location * error
-let dummy_loc = Lexing.dummy_pos, Lexing.dummy_pos
-
 let error loc e = raise (Error (loc, e))
 
 let print_const fmt = function
@@ -56,55 +52,79 @@ let print_clock fmt = function
 let report fmt = function
   | ExpectedSub (c1, c2) ->
     fprintf fmt
-    "This expression has clock %a but is expected be a subclock of %a"
+    "This expression has clock %a but was expected be a subclock of %a."
     print_clock c1 print_clock c2
-  | ExpectedBase clk ->
+  | ExpectedSimple clk ->
     fprintf fmt
-      "This expression has clock %a but is expected to have a type simple clock"
+      "This expression has clock %a but was expected to have a simple clock"
       print_clock clk
   | ExpectedSame ->
     fprintf fmt
       "These expressions are supposed to be on the same clock."
 
+type signature =
+  | CBase
+  | CClk of signature * int * c_expr
+
+let rec signature_from (cki, cko) =
+  let i = ref 0 in
+  let fresh() = (incr i; !i) in
+  let vars = Hashtbl.create 5 in
+  let rec aux = function
+    | Base -> CBase
+    | Clk(clk, id, cond) ->
+      let sclk = aux clk in
+      let sid = try Hashtbl.find vars id
+        with Not_found -> (let sid = fresh() in Hashtbl.add vars id sid; sid)
+      in
+      CClk(sclk, sid, cond)
+  in
+  List.map aux cki, List.map aux cko
+
+let satisfy_signature clki (signi, signo) =
+  let vars = Hashtbl.create 5 in
+  let rec aux acc ck sg = match ck, sg with
+    | _, CBase -> acc
+    | Clk(clk, id, cond), CClk(sclk, sid, scond) when cond = scond -> begin
+      if aux acc clk sclk then try
+        Hashtbl.find vars sid = id
+        with Not_found -> (Hashtbl.add vars sid id; acc)
+      else false
+    end
+    | _ -> false
+  in
+  let rec replace = function
+    | CBase -> Base
+    | CClk(sclk, sid, cond) -> let id = Hashtbl.find vars sid in
+      Clk(replace sclk, id, cond)
+  in
+  if List.fold_left2 aux true clki signi then List.map replace signo
+  else assert false
 
 module Delta = struct
   let nodes = Hashtbl.create 5
-
-  let find n =
-    Hashtbl.find nodes n
-
-  let add x clk =
-    Hashtbl.replace nodes x (x, clk);
-    x
+  let find x clki = satisfy_signature clki (Hashtbl.find nodes x)
+  let add x (clki, clko) = Hashtbl.replace nodes x (signature_from (clki, clko))
 end
 
-type io = Vinput | Vpatt
 module Gamma = struct
-  type t = (Ident.t * base_clock * io) M.t
-
+  type t = base_clock M.t
   let empty = M.empty
-
-  let add loc env x c io =
-    M.add x (x, c, io) env
-
-  let adds loc io =
-    List.fold_left (fun env (x, _) -> add loc env x Base io)
+  let add env x clk = M.add x clk env
+  let adds = List.fold_left (fun env (x, clk) -> add env x clk)
       (* TODO Clocks of new variables *)
-
-  let find loc env x = M.find x env
+  let find env x = M.find x env
 end
 
 module Epsilon = struct
   let consts = Hashtbl.create 5
-
-  let find loc = Hashtbl.find consts
-
-  let add loc x clk = Hashtbl.add consts x (x, clk)
+  let find = Hashtbl.find consts
+  let add x clk = Hashtbl.add consts x clk
 end
 
 let base_clock_of_clock loc = function
   | [c] -> c
-  | e -> error loc (ExpectedBase e)
+  | e -> error loc (ExpectedSimple e)
 
 let rec sub_base clk1 clk2 = match clk1 with
   | c when c = clk2 -> true
@@ -133,12 +153,9 @@ and clock_expr_desc env loc = function
   | TE_const c -> CE_const c , [Base]
 
   | TE_ident x -> begin
-    try
-      let x, clk, _ = Gamma.find loc env x in
-      CE_ident x , [clk]
-    with _ ->
-      let x, clk = Epsilon.find loc x in
-      CE_ident x , [clk]
+    let clk = try Gamma.find env x
+    with _ -> Epsilon.find x in
+    CE_ident x , [clk]
     end
 
   | TE_unop (op, e) ->
@@ -176,10 +193,8 @@ and clock_expr_desc env loc = function
   | TE_app (f, el) ->
     let cel = List.map (clock_expr env) el in
     let celclk = List.flatten (List.map (fun x -> x.cexpr_clock) cel) in
-    let _, (clki, clko) = Delta.find f in
-    if sub celclk clki then
+    let clko = Delta.find f celclk in
       CE_app (f, cel), clko
-    else error loc ExpectedSame
 
   | TE_arrow (e1, e2) ->
     let ce1 = clock_expr env e1 in
@@ -205,7 +220,11 @@ and clock_expr_desc env loc = function
 
   | TE_current e ->
     let ce = clock_expr env e in
-    CE_current ce, [Base]
+    let clk = match base_clock_of_clock ce.cexpr_loc ce.cexpr_clock with
+      | Base -> Base
+      | Clk(ck, _, _) -> ck
+    in
+    CE_current ce, [clk]
 
   | TE_tuple el ->
     let tel = List.map (clock_expr env) el in
@@ -218,8 +237,8 @@ and clock_expr_desc env loc = function
     let ccond = clock_expr env cond in
     let idclk =
       try
-        let _, clk, _ = Gamma.find loc env id in clk
-      with _ -> let _, clk = Epsilon.find loc id in clk in
+        Gamma.find env id
+      with _ -> Epsilon.find id in
     if sub_base ceclk idclk
     then CE_when(ce, ccond, id), [Clk(ceclk, id, ccond)]
     else if sub_base idclk ceclk
@@ -256,7 +275,7 @@ and expected_base_clock env e =
   let ce = clock_expr env e in
   match ce.cexpr_clock with
   | [_] -> ce
-  |  _ ->  error e.texpr_loc (ExpectedBase (ce.cexpr_clock))
+  |  _ ->  error e.texpr_loc (ExpectedSimple (ce.cexpr_clock))
 
 let rec clock_patt env p =
   let clks = clock_patt_desc env p.tpatt_loc p.tpatt_desc in
@@ -268,12 +287,7 @@ let rec clock_patt env p =
   }
 
 and clock_patt_desc env loc patt =
-  List.map
-    (fun x ->
-       match Gamma.find loc env x with
-       | x, clk, Vpatt -> clk
-       | _  -> assert false (* TODO What is this ? *)
-    ) patt
+  List.map (Gamma.find env) patt
 
 let clock_equation env eq =
   let patt = clock_patt env eq.teq_patt in
@@ -307,41 +321,37 @@ let clock_node n =
   let out_clk = List.map clock_decl n.tn_output in
   let loc_clk = List.map clock_decl n.tn_local in
   let in_clk = List.map clock_decl n.tn_input in
-  let env = Gamma.adds n.tn_loc Vpatt Gamma.empty (out_clk@loc_clk) in
-  let env = Gamma.adds n.tn_loc Vinput env in_clk in
+  let env = Gamma.adds Gamma.empty (out_clk@loc_clk@in_clk) in
   let equs = List.map (clock_equation env) n.tn_equs in
 
   let input =
     List.map
-      (fun (x, typ, clk) -> let x', clk, _ = Gamma.find n.tn_loc env x in (x', typ, clk))
+      (fun (x, typ, clk) -> let clk = Gamma.find env x in (x, typ, clk))
       n.tn_input
   in
   let output =
     List.map
-      (fun (x, typ, clk) -> let x', clk, _ = Gamma.find n.tn_loc env x in (x', typ, clk))
+      (fun (x, typ, clk) -> let clk = Gamma.find env x in (x, typ, clk))
       n.tn_output
   in
   let local =
     List.map
-      (fun (x, typ, clk) -> let x', clk, _ = Gamma.find n.tn_loc env x in (x', typ, clk))
+      (fun (x, typ, clk) -> let clk = Gamma.find env x in (x, typ, clk))
       n.tn_local
   in
   let c_in = List.map (fun (_, _, clk) -> clk ) input in
   let c_out = List.map (fun (_, _, clk) -> clk) output in
-  let name = Delta.add n.tn_name (c_in, c_out) in
-  let node =
-    { cn_name = name;
-      cn_input = input;
-      cn_output = output;
-      cn_local = local;
-      cn_equs = equs;
-      cn_loc = n.tn_loc; }
-  in
-  node
+  Delta.add n.tn_name (c_in, c_out);
+  { cn_name = n.tn_name;
+    cn_input = input;
+    cn_output = output;
+    cn_local = local;
+    cn_equs = equs;
+    cn_loc = n.tn_loc; }
 
 let clock_constant c =
   let cexpr = clock_expr Gamma.empty c.tc_desc in
-  Epsilon.add c.tc_desc.texpr_loc c.tc_name (List.hd cexpr.cexpr_clock);
+  Epsilon.add c.tc_name Base;
   {
     cc_name = c.tc_name;
     cc_desc = cexpr;
