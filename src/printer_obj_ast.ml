@@ -58,7 +58,7 @@ and print_statement fmt = function
   | OS_Var_assign (id, e) | OS_State_assign (id, e) ->
     fprintf fmt "@[(@[%a@]) := (@[%a@])@]" Ident.print id print_expr e
   | OS_Sequence (s1, s2) ->
-    fprintf fmt "@[@[%a@]; @[%a@]@]" print_statement s1 print_statement s2
+    fprintf fmt "@[@[%a;@]@\n @[%a@]@]" print_statement s1 print_statement s2
   | OS_Skip -> fprintf fmt "skip"
   | OS_Reset id -> fprintf fmt "@[%a.reset()@]" Ident.print id
   | OS_Step (idl, id, el) ->
@@ -100,7 +100,7 @@ let print_var_dec_list = print_list print_var_dec ";"
 let print_class fmt c =
   let inp, out, loc, st = c.oc_step in
   fprintf fmt
-    "@[machine %a =@\nmemory @[%a@]@\ninstances @[%a@]@\nreset() = @[%a@]@\n@[step (@[%a@])@] @[returns (@[%a@])@] = @[var @[%a;@]@] in @[<v 2>let@ @[%a@]@]@\ntel@]"
+    "@[machine %a =@\nmemory [@[%a@]]@\ninstances [@[%a@]]@\nreset() = @[%a@]@\n@[step (@[%a@])@] @[returns (@[%a@])@] = @[var @[%a;@]@] in @[<v 2>@[%a@]@]@]"
     Ident.print c.oc_name
     print_var_dec_list c.oc_mem
     print_var_dec_list [] (* c.oc_instances *)

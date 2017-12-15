@@ -21,6 +21,12 @@ let rec const_of_expr e =
   | CE_const c -> c
   | _ -> assert false
 
+let rec const_or_ident e =
+  match e.cexpr_desc with
+  | CE_const c -> true, OE_Const c
+  | CE_ident id -> false, OE_Ident id
+  | _ -> assert false
+
 let base_clock_of_clock = function
   | [c] -> c
   | e -> assert false
@@ -54,7 +60,8 @@ and trans_expr env e =
   | CE_when (e, cond, id) -> trans_expr env e
   | CE_current e -> trans_expr env e
   | CE_if (_, _, _) -> assert false
-  | _ -> assert false
+  | e -> Format.eprintf "%a" Printer_clocked_ast.print_exp_desc e;
+    assert false
 
 and trans_aux env x expr = match expr.cexpr_desc with
   | CE_merge (id, ml) ->
@@ -71,30 +78,43 @@ and trans_eq env eq =
       let x = List.hd patt.cpatt_desc in
       let c = trans_expr env e2 in
       let newm = M.add x (base_typ_of_typ expr.cexpr_type) m in
-      let newsi = OS_Sequence (
-          OS_State_assign
-            (x, OE_Const(const_of_expr e1)),
-          si) in
-      let news = OS_Sequence (
+      let const, coe1 = const_or_ident e1 in
+      let newsi = if const
+        then OS_Sequence (si, OS_State_assign (x, coe1))
+        else OS_Sequence (si, OS_Var_assign (x, coe1)) in
+      let news = OS_Sequence (s,
           control
             (base_clock_of_clock expr.cexpr_clock)
-            (OS_State_assign (x, c)),
-          s) in
+            (OS_State_assign (x, c))) in
+      newm, newsi, j, d, news
+    end
+  | CE_pre e -> begin
+      let x = List.hd patt.cpatt_desc in
+      let c = trans_expr env e in
+      let newm = M.add x (base_typ_of_typ expr.cexpr_type) m in
+      let newsi = si in
+      let news = OS_Sequence (s,
+                              control
+                                (base_clock_of_clock expr.cexpr_clock)
+                                (OS_State_assign (x, c))) in
       newm, newsi, j, d, news
     end
   | CE_app (f, el) -> assert false
   | _ ->
     let x = List.hd patt.cpatt_desc in
-    let news = control
-        (base_clock_of_clock expr.cexpr_clock)
-        (trans_aux env x expr) in
+    let news = OS_Sequence (s,
+        control
+          (base_clock_of_clock expr.cexpr_clock)
+          (trans_aux env x expr)) in
     m, si, j, d, news
 
 and trans_eq_list env = List.fold_left trans_eq env
 
 and trans_node n =
   let initr = List.fold_left
-      (fun r (id, t, clk) -> M.add id t r) M.empty n.cn_local in
+      (fun r (id, t, clk) -> M.add id t r)
+      M.empty
+      (n.cn_local@n.cn_input@n.cn_output) in
   let m, si, j, d, s =
     trans_eq_list (M.empty, OS_Skip, M.empty, initr, OS_Skip) n.cn_equs in
   {
