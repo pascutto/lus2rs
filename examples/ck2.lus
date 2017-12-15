@@ -7,7 +7,7 @@ tel
 node ck2 (c: bool; d: bool; e: int)
 returns (n: int);
 var
-  d_on_c : bool;
+  d_on_c : bool when c;
 
 let
   d_on_c = d when c;
