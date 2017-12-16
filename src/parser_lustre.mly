@@ -32,7 +32,7 @@ Clément PASCUTTO <clement.pascutto@ens.fr
 
 %nonassoc ELSE
 %right ARROW FBY
-%left WHEN
+%left WHEN EVERY
 %left IMPL
 %left OR
 %left AND
