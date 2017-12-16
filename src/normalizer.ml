@@ -104,21 +104,19 @@ let rec normalize ctx e =
     in
     (x_decl@new_vars, x_eq::new_eqs), x_expr
 
-  | CE_when (e, cond, clk) ->
-    let ctx, e' = normalize ctx e in
-    ctx, {e with cexpr_desc = CE_when(e', cond, clk)}
+  | CE_when (e1, cond, clk) ->
+    let ctx, e1' = normalize ctx e1 in
+    ctx, {e with cexpr_desc = CE_when(e1', cond, clk)}
 
-  | CE_merge (id, le) ->
-    (* let (new_vars,new_eqs), e1' = List.fold_left
-        (fun acc (c, e) -> (normalize ctx e) :: acc) [] el in
-  let x_decl, x_patt, x_expr = new_pat e in
-  let x_eq =
-    { ceq_patt = x_patt;
-      ceq_expr = { e with cexpr_desc = CE_current e1' }; }
+  | CE_merge (e1, mat) ->
+    let ctx, e1' = normalize ctx e1 in
+    let (new_vars,new_eqs), mat' = normalize_matching ctx mat in
+    let x_decl, x_patt, x_expr = new_pat e in
+    let x_eq = {
+      ceq_patt = x_patt;
+      ceq_expr = { e with cexpr_desc = CE_merge (e1', mat') }; }
   in
-  (x_decl@new_vars, x_eq::new_eqs), x_expr *)
-    let ctx, le' = normalize_matching ctx le in
-    ctx, { e with cexpr_desc = CE_merge (id, le')}
+  (x_decl@new_vars, x_eq::new_eqs), x_expr
 
   | CE_fby(c,e1) ->
     let (new_vars,new_eqs), e1' = normalize ctx e1 in
