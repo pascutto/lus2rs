@@ -17,7 +17,7 @@ open Ast_obj
 module M = Map.Make(Ident)
 
 let i = ref 0
-let new_obj() = incr i; !i
+let new_obj() = incr i; ("o" ^ (string_of_int !i))
 
 let rec const_of_expr e =
   match e.cexpr_desc with

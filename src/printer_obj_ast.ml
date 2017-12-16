@@ -60,9 +60,9 @@ and print_statement fmt = function
   | OS_Sequence (s1, s2) ->
     fprintf fmt "@[@[%a;@]@\n @[%a@]@]" print_statement s1 print_statement s2
   | OS_Skip -> fprintf fmt "skip"
-  | OS_Reset id -> fprintf fmt "@[%i.reset()@]" id
+  | OS_Reset id -> fprintf fmt "@[%s.reset()@]" id
   | OS_Step (idl, id, el) ->
-    fprintf fmt "@[@[(%a)@] = @[%i.step(@[%a@])@]@]"
+    fprintf fmt "@[@[(%a)@] = @[%s.step(@[%a@])@]@]"
       print_tuple_list idl
       id
       print_arg_list el
@@ -95,7 +95,7 @@ let print_var_dec fmt (name, ty) =
   fprintf fmt "%a : %a" Ident.print name print_base_type ty
 
 let print_instance fmt (id, cl) =
-  fprintf fmt "@[%i : %a@]" id Ident.print cl
+  fprintf fmt "@[%s : %a@]" id Ident.print cl
 
 let print_var_dec_list = print_list print_var_dec ";"
 

@@ -27,11 +27,11 @@ and o_statement =
   | OS_State_assign of Ident.t * o_expr
   | OS_Sequence of o_statement * o_statement
   | OS_Skip
-  | OS_Reset of int
-  | OS_Step of Ident.t list * int * o_expr list
+  | OS_Reset of string
+  | OS_Step of Ident.t list * string * o_expr list
   | OS_Case of o_expr * (const * o_statement) list
 
-type o_inst = int * Ident.t
+type o_inst = string * Ident.t
 
 and o_class = {
   oc_name: Ident.t;
