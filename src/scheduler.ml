@@ -40,8 +40,8 @@ let rec add_vars_of_exp s {cexpr_desc = e} =
   | CE_current e -> add_vars_of_exp s e
   | CE_binop (_, e1, e2) -> add_vars_of_exp (add_vars_of_exp s e1) e2
   | CE_unop (_, e) -> add_vars_of_exp s e
-  | CE_app (_,l) -> List.fold_left add_vars_of_exp s l
-  | CE_prim (_,l) -> List.fold_left add_vars_of_exp s l
+  | CE_app (_,l, r) -> List.fold_left add_vars_of_exp s (r::l)
+  | CE_prim (_,l, r) -> List.fold_left add_vars_of_exp s (r::l)
   | CE_tuple l -> List.fold_left add_vars_of_exp s l
   | CE_merge (e, mat) ->
     List.fold_left add_vars_of_exp s (e::(List.map snd mat))

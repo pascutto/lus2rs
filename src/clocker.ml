@@ -165,11 +165,12 @@ and clock_expr_desc env loc = function
     else if sub clk2 clk1 then CE_binop (op, ce1, ce2), clk2
     else error loc (ExpectedSub(clk2, clk1))
 
-  | TE_app (f, el) ->
+  | TE_app (f, el, r) ->
+    let cr = clock_expr env r in
     let cel = List.map (clock_expr env) el in
     let celclk = List.flatten (List.map (fun x -> x.cexpr_clock) cel) in
     let clko = Delta.find f celclk in
-      CE_app (f, cel), clko
+      CE_app (f, cel, cr), clko
 
   | TE_fby (e1, e2) ->
     let ce1 = clock_expr env e1 in

@@ -45,7 +45,8 @@ Clément PASCUTTO <clement.pascutto@ens.fr
       "when", WHEN;
       "merge", MERGE;
       "const", CONST;
-      "with", WITH
+      "with", WITH;
+      "every", EVERY
     ]
 }
 

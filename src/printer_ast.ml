@@ -62,8 +62,9 @@ let rec print_exp fmt e = match e.pexpr_desc with
   | LSE_if (e1, e2, e3) ->
     fprintf fmt "@[if (@[%a@]) then (@[%a@]) else (@[%a@])@]"
       print_exp e1 print_exp e2 print_exp e3
-  | LSE_app (name, e_list) ->
-      fprintf fmt "%s(@[%a@])" name print_arg_list e_list
+  | LSE_app (name, e_list, reset) ->
+    fprintf fmt "@[%s(@[%a@]) every %a@]"
+      name print_arg_list e_list print_exp reset
   | LSE_arrow (l, r) ->
     fprintf fmt "@[(@[%a@]) -> (@[%a@])@]" print_exp l print_exp r
   | LSE_fby (l, r) ->

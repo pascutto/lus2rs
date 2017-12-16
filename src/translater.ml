@@ -11,6 +11,7 @@ Clément PASCUTTO <clement.pascutto@ens.fr
 ########
 *)
 
+open Ast_types_lustre
 open Ast_clocked_lustre
 open Ast_obj
 
@@ -101,15 +102,20 @@ and trans_eq env eq =
                                 (OS_State_assign (x, c))) in
       newm, newsi, j, d, news
     end
-  | CE_app (f, el) ->
+  | CE_app (f, el, r) ->
     let c = List.map (trans_expr env) el in
     let o = new_obj() in
+    let r' = trans_expr env r in
     let newsi = OS_Sequence (si, OS_Reset(o)) in
     let newj = (o, f) :: j in
-    let news = OS_Sequence (s,
-                            control
-                              (base_clock_of_clock expr.cexpr_clock)
-                              (OS_Step (patt.cpatt_desc, o, c)))
+    let news = OS_Sequence(
+        OS_Sequence (s,
+                     control
+                       (base_clock_of_clock expr.cexpr_clock)
+                       (OS_Step (patt.cpatt_desc, o, c))),
+                       control
+                         (base_clock_of_clock expr.cexpr_clock)
+                         (OS_Case (r', [(Cbool true), OS_Reset(o)])))
     in
     m, newsi, newj, d, news
   | _ ->

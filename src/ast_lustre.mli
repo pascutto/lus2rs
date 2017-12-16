@@ -27,7 +27,7 @@ and ls_expr_desc =
   | LSE_ident of ident
   | LSE_binop of binop * ls_expr * ls_expr
   | LSE_unop of unop * ls_expr
-  | LSE_app of ident * ls_expr list
+  | LSE_app of ident * ls_expr list * ls_expr
   | LSE_arrow of ls_expr * ls_expr
   | LSE_fby of ls_expr * ls_expr
   | LSE_pre of ls_expr

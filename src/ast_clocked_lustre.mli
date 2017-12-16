@@ -34,8 +34,8 @@ and c_expr_desc =
   | CE_binop of binop * c_expr * c_expr
   | CE_unop of unop * c_expr
   | CE_fby of c_expr * c_expr
-  | CE_app of Ident.t * c_expr list
-  | CE_prim of Ident.t * c_expr list (* ?? *)
+  | CE_app of Ident.t * c_expr list * c_expr
+  | CE_prim of Ident.t * c_expr list * c_expr
   | CE_pre of c_expr
   | CE_current of c_expr
   | CE_merge of c_expr * (const * c_expr) list

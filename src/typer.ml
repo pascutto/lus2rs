@@ -40,6 +40,8 @@ exception Error of location * error
 let error loc e = raise (Error (loc, e))
 let errors loc s = error loc (Other s)
 
+let dummy_loc = Lexing.dummy_pos, Lexing.dummy_pos
+
 let print_base_typpe fmt = function
   | Tbool -> fprintf fmt "bool"
   | Tint -> fprintf fmt "int"
@@ -153,7 +155,11 @@ let real_expr_of_expr te =
   match te.texpr_type with
   | [Treal] -> te
   | [Tint] ->
-      { texpr_desc = TE_prim (real_of_int,[te]);
+    { texpr_desc = TE_prim (real_of_int,
+                            [te],
+                            { texpr_loc = dummy_loc;
+                              texpr_desc = TE_const(Cbool false);
+                              texpr_type = [Tbool]});
 	texpr_type = [Treal];
 	texpr_loc = (Lexing.dummy_pos,Lexing.dummy_pos);
       }
@@ -286,17 +292,20 @@ and type_expr_desc env loc = function
 
   | LSE_if (e1, e2, e3) -> assert false
 
-  | LSE_app (f, el) -> begin
-    try
-    	let (f, (t_in,t_out)) , is_prim = Delta.find f in
-    	let tel = type_args env loc t_in el in
-    	let aLSP_node = if is_prim then TE_prim(f, tel) else TE_app(f, tel) in
-    	aLSP_node ,
-    	begin match t_out with
-      	| [] -> assert false
-      	| _ -> t_out
-    	end
-    with Not_found -> error loc (UnboundNode f)
+  | LSE_app (f, el, r) -> begin
+      try
+        let (f, (t_in,t_out)) , is_prim = Delta.find f in
+        let tel = type_args env loc t_in el in
+        let tr = expected_type env r [Tbool] in
+        let aLSP_node = if is_prim then
+            TE_prim(f, tel, tr)
+          else TE_app(f, tel, tr) in
+        aLSP_node,
+        begin match t_out with
+          | [] -> assert false
+        	| _ -> t_out
+        end
+      with Not_found -> error loc (UnboundNode f)
   end
 
   | LSE_arrow (e1, e2) -> assert false

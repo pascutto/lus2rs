@@ -31,8 +31,8 @@ and t_expr_desc =
   | TE_binop of binop * t_expr * t_expr
   | TE_unop of unop * t_expr
   | TE_fby of t_expr * t_expr
-  | TE_app of Ident.t * t_expr list
-  | TE_prim of Ident.t * t_expr list (* ?? *)
+  | TE_app of Ident.t * t_expr list * t_expr
+  | TE_prim of Ident.t * t_expr list * t_expr
   | TE_pre of t_expr
   | TE_current of t_expr
   | TE_merge of t_expr * (const * t_expr) list

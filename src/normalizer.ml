@@ -64,21 +64,23 @@ let rec normalize ctx e =
     let ctx, e2' = normalize ctx e2 in
     ctx, {e with cexpr_desc = CE_binop(op, e1', e2')}
 
-  | CE_app(n,le) ->
+  | CE_app(n,le,r) ->
+    let ctx, r' = normalize ctx r in
     let (new_vars,new_eqs), le' = normalize_list ctx le in
     let x_decl, x_patt, x_expr = new_pat e in
     let x_eq =
       { ceq_patt = x_patt;
-        ceq_expr = { e with cexpr_desc = CE_app(n,le') }; }
+        ceq_expr = { e with cexpr_desc = CE_app(n,le',r') }; }
     in
     (x_decl@new_vars, x_eq::new_eqs), x_expr
 
-  | CE_prim(n,le) ->
+  | CE_prim(n,le,r) ->
+    let ctx, r' = normalize ctx r in
     let (new_vars,new_eqs), le' = normalize_list ctx le in
     let x_decl, x_patt, x_expr = new_pat e in
     let x_eq =
       { ceq_patt = x_patt;
-        ceq_expr = { e with cexpr_desc = CE_prim(n,le') }; }
+        ceq_expr = { e with cexpr_desc = CE_prim(n,le',r') }; }
     in
     (x_decl@new_vars, x_eq::new_eqs), x_expr
 

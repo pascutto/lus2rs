@@ -72,8 +72,9 @@ and print_exp_desc fmt = function
     fprintf fmt "@[(@[%a@]) @[%a@] (@[%a@])@]"
       print_exp e1 print_binop op print_exp e2
   | TE_unop (op, e) -> fprintf fmt "%a(%a)" print_unop op print_exp e
-  | TE_app (name, e_list) | TE_prim (name, e_list) ->
-      fprintf fmt "%a(@[%a@])" Ident.print name print_arg_list e_list
+  | TE_app (name, e_list, reset) | TE_prim (name, e_list, reset) ->
+    fprintf fmt "@[%a(@[%a@]) every %a@]"
+      Ident.print name print_arg_list e_list print_exp reset
   | TE_fby (l, r) ->
       fprintf fmt "@[(@[%a@]) fby (@[%a@])@]" print_exp l print_exp r
   | TE_pre e ->
