@@ -53,7 +53,7 @@ let schedule_equs nloc inputs equs =
       (fun g eq ->
          let vp = add_vars_of_patt S.empty eq.ceq_patt in
          let ve = add_vars_of_exp S.empty eq.ceq_expr in
-      	S.fold (fun x g -> Graph.add (x, ve, eq) g) vp g)
+         S.fold (fun x g -> Graph.add (x, ve, eq) g) vp g)
       Graph.empty equs
   in
   (* Suppression des dépendances aux entrées. *)
@@ -76,12 +76,12 @@ let schedule_equs nloc inputs equs =
         Graph.fold (fun (x,_,_) s -> S.add x s) g1 S.empty
       in
       let g =
-	Graph.fold
+        Graph.fold
           (fun (y,s,e) g -> Graph.add (y,S.diff s sv,e) g)
           g2 Graph.empty
       in
       let topo =
-	Graph.fold
+        Graph.fold
           (fun (_,_,e) l -> if List.mem e l then l else e::l)
           g1 topo
       in

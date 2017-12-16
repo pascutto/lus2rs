@@ -82,9 +82,9 @@ and print_exp_desc fmt = function
     fprintf fmt "@[%a(@[%a@]) every %a@]"
       Ident.print name print_arg_list e_list print_exp reset
   | CE_fby (l, r) ->
-      fprintf fmt "@[(@[%a@]) fby (@[%a@])@]" print_exp l print_exp r
+    fprintf fmt "@[(@[%a@]) fby (@[%a@])@]" print_exp l print_exp r
   | CE_pre e ->
-      fprintf fmt "pre (@[%a@])" print_exp e
+    fprintf fmt "pre (@[%a@])" print_exp e
   | CE_current e ->
     fprintf fmt "current (@[%a@])" print_exp e
   | CE_when (e, cond, clk) ->
@@ -93,7 +93,7 @@ and print_exp_desc fmt = function
   | CE_merge(clk,le) ->
     fprintf fmt "merge @[%a@] @[%a@]" print_exp clk print_matching le
   | CE_tuple e_list ->
-      fprintf fmt "(@[%a@])" print_tuple_arg_list e_list
+    fprintf fmt "(@[%a@])" print_tuple_arg_list e_list
 
 and print_arg_list fmt = function
   | [] -> ()
@@ -123,11 +123,11 @@ let print_eq fmt eq =
 let print_var_dec fmt (name, ty, clk) = match clk with
   | Base -> fprintf fmt "%a : %a" Ident.print name print_base_type ty
   | Clk(ck, id, cond) -> fprintf fmt "(%a : %a :: %a on %a(%a))"
-                       Ident.print name
-                       print_base_type ty
-                       print_base_clock ck
-                       print_const cond
-                       Ident.print id
+                           Ident.print name
+                           print_base_type ty
+                           print_base_clock ck
+                           print_const cond
+                           Ident.print id
 
 let rec print_var_dec_list = print_list print_var_dec ";"
 

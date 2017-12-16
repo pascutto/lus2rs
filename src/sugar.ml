@@ -19,8 +19,8 @@ let rec transform_expr e =
 and transform_expr_descr loc expr = match expr with
   | LSE_const c -> expr
   | LSE_ident id -> begin try Epsilon.find id
-    with Not_found -> expr
-  end
+      with Not_found -> expr
+    end
   | LSE_binop (op, e1, e2) ->
     LSE_binop (op, transform_expr e1, transform_expr e2)
   | LSE_unop (op, e) -> LSE_unop (op, transform_expr e)
@@ -28,8 +28,8 @@ and transform_expr_descr loc expr = match expr with
     LSE_app (id, List.map transform_expr el, transform_expr r)
   | LSE_arrow (e1, e2) -> LSE_merge(
       mk_expr (LSE_fby (
-        (mk_expr (LSE_const(Cbool true)) e1.pexpr_loc),
-        (mk_expr (LSE_const(Cbool false)) e2.pexpr_loc))) loc,
+          (mk_expr (LSE_const(Cbool true)) e1.pexpr_loc),
+          (mk_expr (LSE_const(Cbool false)) e2.pexpr_loc))) loc,
       [(Cbool true, transform_expr e1); (Cbool false, transform_expr e2)]
     )
   | LSE_fby (e1, e2) -> LSE_fby (transform_expr e1, transform_expr e2)

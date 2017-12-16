@@ -51,27 +51,27 @@ let print_type fmt = function
   | ([]) -> fprintf fmt "empty tuple"
   | [t] -> print_base_typpe fmt t
   | (t::tl) ->
-      fprintf fmt "(";
-      print_base_typpe fmt t;
-      List.iter (fun t -> fprintf fmt " * %a" print_base_typpe t) tl;
-      fprintf fmt ")"
+    fprintf fmt "(";
+    print_base_typpe fmt t;
+    List.iter (fun t -> fprintf fmt " * %a" print_base_typpe t) tl;
+    fprintf fmt ")"
 
 let report fmt = function
   | UnboundVar id -> fprintf fmt "unbound variable %s" id
   | UnboundNode id -> fprintf fmt "unbound node %s" id
   | ExpectedType (t1,t2) ->
-      fprintf fmt
+    fprintf fmt
       "this expression has type %a but is expected to have type %a"
       print_type t1 print_type t2
   | ExpectedPattern typ ->
-      fprintf fmt "this pattern is expected to have type %a"
-        print_type typ
+    fprintf fmt "this pattern is expected to have type %a"
+      print_type typ
   | ExpectedBase typ ->
-      fprintf fmt
-     "this expression has type %a but is expected to have a type simple type"
+    fprintf fmt
+      "this expression has type %a but is expected to have a type simple type"
       print_type typ
   | ExpectedNum typ ->
-      fprintf fmt
+    fprintf fmt
       "this expression has type %a but is expected to have type int or real"
       print_type typ
   | Clash id -> fprintf fmt "The variable %s is defined several times" id
@@ -81,8 +81,8 @@ let report fmt = function
   | Other s -> fprintf fmt "%s" s
   | FlatTuple -> fprintf fmt "nested tuples are forbidden"
   | UndefinedOutputs l ->
-      fprintf fmt "those output variables are undefined:%a"
-	(fun fmt -> List.iter (fun x -> fprintf fmt "%s " x)) l
+    fprintf fmt "those output variables are undefined:%a"
+      (fun fmt -> List.iter (fun x -> fprintf fmt "%s " x)) l
   | InputVar s -> fprintf fmt "%s is an input variable" s
 
 let int_of_real = Ident.make "int_of_real" Ident.Prim
@@ -100,7 +100,7 @@ module Delta = struct
 
   let find n =
     try Hashtbl.find nodes n, false with
-	Not_found -> List.assoc n prims , true
+      Not_found -> List.assoc n prims , true
 
   let add x t =
     let x' = Ident.make x Ident.Node in
@@ -126,7 +126,7 @@ module Gamma = struct
     List.fold_left (fun env (x, t, c) -> add loc env x t io)
 
   let find loc env x = try
-    M.find x env
+      M.find x env
     with Not_found -> error loc (UnboundVar x)
 
   let patts_vars env =
@@ -146,8 +146,8 @@ let compatible actual_ty expected_ty =
   try
     List.fold_left2
       (fun well_t ac_t ex_t ->
-	let well_t' = compatible_base ac_t ex_t in
-	(well_t && well_t'))
+         let well_t' = compatible_base ac_t ex_t in
+         (well_t && well_t'))
       true actual_ty expected_ty
   with Invalid_argument _ -> false
 
@@ -160,9 +160,9 @@ let real_expr_of_expr te =
                             { texpr_loc = dummy_loc;
                               texpr_desc = TE_const(Cbool false);
                               texpr_type = [Tbool]});
-	texpr_type = [Treal];
-	texpr_loc = (Lexing.dummy_pos,Lexing.dummy_pos);
-      }
+      texpr_type = [Treal];
+      texpr_loc = (Lexing.dummy_pos,Lexing.dummy_pos);
+    }
   | _ -> assert false
 
 let real_op_of_int_op op =
@@ -175,13 +175,13 @@ let real_op_of_int_op op =
 
 let not_a_nested_tuple e loc =
   match e with
-    | LSE_tuple el ->
-	List.iter
-	  (fun e ->
-	     match e.pexpr_desc with
-		 LSE_tuple _ -> error loc FlatTuple;
-	       | _ -> ()) el
-    | _ -> assert false
+  | LSE_tuple el ->
+    List.iter
+      (fun e ->
+         match e.pexpr_desc with
+           LSE_tuple _ -> error loc FlatTuple;
+         | _ -> ()) el
+  | _ -> assert false
 
 let rec is_constant env e =
   match e.texpr_desc with
@@ -193,7 +193,7 @@ let rec const_of_expr e =
   match e.texpr_desc with
   | TE_const c -> [c]
   | TE_tuple el ->
-      List.fold_right (fun e acc -> const_of_expr e @ acc) el []
+    List.fold_right (fun e acc -> const_of_expr e @ acc) el []
   | _ -> assert false
 
 let type_const = function
@@ -212,40 +212,40 @@ let rec type_expr env e =
 
 and type_expr_desc env loc = function
   | LSE_const c ->
-      TE_const c , type_const c
+    TE_const c , type_const c
 
   | LSE_ident x ->
-      let x, typ, _ = Gamma.find loc env x in
-      TE_ident x , [typ]
+    let x, typ, _ = Gamma.find loc env x in
+    TE_ident x , [typ]
 
   | LSE_unop (Op_not, e) ->
-      let tt = [Tbool] in
-      let te = expected_type env e tt in
-      TE_unop(Op_not, te) , tt
+    let tt = [Tbool] in
+    let te = expected_type env e tt in
+    TE_unop(Op_not, te) , tt
 
   | LSE_unop (Op_uminus, e) ->
-      let te = type_expr env e in
-      begin match te.texpr_type with
+    let te = type_expr env e in
+    begin match te.texpr_type with
       | [Tint] -> TE_unop (Op_uminus, te) , [Tint]
       | [Treal] -> TE_unop (Op_uminus_f, te) , [Treal]
       | typ -> error e.pexpr_loc (ExpectedNum (typ))
-      end
+    end
 
   | LSE_unop (Op_uminus_f, e) ->
-      let tt = [Treal] in
-      let te = expected_type env e tt in
-      TE_unop (Op_uminus_f, te) , tt
+    let tt = [Treal] in
+    let te = expected_type env e tt in
+    TE_unop (Op_uminus_f, te) , tt
 
   | LSE_binop ((Op_and | Op_or | Op_impl as op), e1, e2) ->
-      let tt = [Tbool] in
-      let te1 = expected_type env e1 tt in
-      let te2 = expected_type env e2 tt in
-      TE_binop (op, te1, te2) , tt
+    let tt = [Tbool] in
+    let te1 = expected_type env e1 tt in
+    let te2 = expected_type env e2 tt in
+    TE_binop (op, te1, te2) , tt
 
   | LSE_binop ((Op_add | Op_sub | Op_mul | Op_div as op), e1, e2) ->
-      let te1 = type_expr env e1 in
-      let te2 = type_expr env e2 in
-      begin match te1.texpr_type, te2.texpr_type with
+    let te1 = type_expr env e1 in
+    let te2 = type_expr env e2 in
+    begin match te1.texpr_type, te2.texpr_type with
       | [Tint], [Tint] -> TE_binop (op, te1, te2), [Tint]
       | [(Tint | Treal)], [(Tint | Treal)] ->
         TE_binop(
@@ -255,40 +255,40 @@ and type_expr_desc env loc = function
         ), [Treal]
       | [(Tint | Treal)], typ -> error e2.pexpr_loc (ExpectedNum (typ))
       | typ, _ -> error e1.pexpr_loc (ExpectedNum (typ))
-      end
+    end
 
   | LSE_binop (Op_mod, e1, e2) ->
-      let tt = [Tint] in
-      let te1 = expected_type env e1 tt in
-      let te2 = expected_type env e2 tt in
-      TE_binop(Op_mod, te1, te2) , tt
+    let tt = [Tint] in
+    let te1 = expected_type env e1 tt in
+    let te2 = expected_type env e2 tt in
+    TE_binop(Op_mod, te1, te2) , tt
 
   | LSE_binop ((Op_div_f | Op_mul_f | Op_sub_f | Op_add_f as op), e1, e2) ->
-      let tt = [Treal] in
-      let te1 = expected_type env e1 tt in
-      let te2 = expected_type env e2 tt in
-      TE_binop (op, te1, te2), tt
+    let tt = [Treal] in
+    let te1 = expected_type env e1 tt in
+    let te2 = expected_type env e2 tt in
+    TE_binop (op, te1, te2), tt
 
   | LSE_binop (Op_eq | Op_neq as op, e1, e2) ->
-      let te1 = type_expr env e1 in
-      let ty1 = te1.texpr_type in
-      let te2 = type_expr env e2 in
-      let ty2 = te2.texpr_type in
-      begin match ty1, ty2 with
-        | [t1], [t2] when t1 = t2 -> TE_binop (op, te1, te2), [Tbool]
-        | _ -> error loc (Other "invalid operands to equality")
-      end
+    let te1 = type_expr env e1 in
+    let ty1 = te1.texpr_type in
+    let te2 = type_expr env e2 in
+    let ty2 = te2.texpr_type in
+    begin match ty1, ty2 with
+      | [t1], [t2] when t1 = t2 -> TE_binop (op, te1, te2), [Tbool]
+      | _ -> error loc (Other "invalid operands to equality")
+    end
 
   | LSE_binop (Op_lt | Op_le | Op_gt | Op_ge as op, e1, e2) ->
-      let te1 = type_expr env e1 in
-      let ty1 = te1.texpr_type in
-      let te2 = type_expr env e2 in
-      let ty2 = te2.texpr_type in
-      begin match ty1, ty2 with
+    let te1 = type_expr env e1 in
+    let ty1 = te1.texpr_type in
+    let te2 = type_expr env e2 in
+    let ty2 = te2.texpr_type in
+    begin match ty1, ty2 with
       | [Tint], [Tint]
       | [Treal], [Treal] -> TE_binop (op, te1, te2), [Tbool]
       | _ -> error loc (Other "invalid operands to comparison")
-      end
+    end
 
   | LSE_if (e1, e2, e3) -> assert false
 
@@ -303,10 +303,10 @@ and type_expr_desc env loc = function
         aLSP_node,
         begin match t_out with
           | [] -> assert false
-        	| _ -> t_out
+          | _ -> t_out
         end
       with Not_found -> error loc (UnboundNode f)
-  end
+    end
 
   | LSE_arrow (e1, e2) -> assert false
 
@@ -319,12 +319,12 @@ and type_expr_desc env loc = function
     else error te2.texpr_loc (ExpectedType (ty2, ty1))
 
   | LSE_pre e ->
-      let te = type_expr env e in
-      TE_pre te, te.texpr_type
+    let te = type_expr env e in
+    TE_pre te, te.texpr_type
 
   | LSE_current e ->
-      let te = type_expr env e in
-      TE_current te, te.texpr_type
+    let te = type_expr env e in
+    TE_current te, te.texpr_type
 
   | LSE_tuple el as n ->
     not_a_nested_tuple n loc;
@@ -339,17 +339,17 @@ and type_expr_desc env loc = function
     TE_when (te, cond, idclk), ty
 
   | LSE_merge(e, mat) -> begin
-    let tout = List.map (fun (c, e) -> type_expr env e) mat in
-    let tin = List.map (fun (c, e) -> type_const c) mat in
-    let tyo = all_same loc (List.map (fun x -> x.texpr_type) tout) in
-    let tmat = List.combine (List.map fst mat) tout in
-    let als = all_same loc tin in
-    let te = type_expr env e in
-    let tyi = als in
-    if compatible te.texpr_type tyi then
-      TE_merge(te, tmat), tyo
-    else error loc (ExpectedType (tyi, als))
-  end
+      let tout = List.map (fun (c, e) -> type_expr env e) mat in
+      let tin = List.map (fun (c, e) -> type_const c) mat in
+      let tyo = all_same loc (List.map (fun x -> x.texpr_type) tout) in
+      let tmat = List.combine (List.map fst mat) tout in
+      let als = all_same loc tin in
+      let te = type_expr env e in
+      let tyi = als in
+      if compatible te.texpr_type tyi then
+        TE_merge(te, tmat), tyo
+      else error loc (ExpectedType (tyi, als))
+    end
 
 and type_when loc env cond clk =
   let tycond = type_const cond in
@@ -363,9 +363,9 @@ and type_args env loc params_ty el =
   let actual_types =
     List.rev
       begin
-	List.fold_left
-	  (fun res te -> List.rev_append te.texpr_type res)
-	  [] tel
+        List.fold_left
+          (fun res te -> List.rev_append te.texpr_type res)
+          [] tel
       end
   in
   let well_typed =
@@ -392,14 +392,14 @@ let rec type_patt env p =
 
 and type_patt_desc env loc patt =
   let pl_tyl = List.map
-	  (fun x ->
-	     match Gamma.find loc env x with
-	     | x, typ, Vpatt -> x, typ
-	     | _  -> error loc (InputVar x)
-   )
-   patt
-   in
-   List.split pl_tyl
+      (fun x ->
+         match Gamma.find loc env x with
+         | x, typ, Vpatt -> x, typ
+         | _  -> error loc (InputVar x)
+      )
+      patt
+  in
+  List.split pl_tyl
 
 
 let type_equation env eq =
@@ -436,14 +436,14 @@ let type_node n =
   let t_out = List.map (fun (_, typ, clk) -> typ) n.lsn_outputs in
   let name = Delta.add n.lsn_name (t_in,t_out) in
   let type_decl = fun (x, typ, clk ) ->
-      let x', _, _ = Gamma.find n.lsn_loc env x in
-      let tclk = match clk with
-        | PBase -> TBase
-        | PClk(clk, cond) -> begin
-            let teclk = type_when n.lsn_loc env cond clk in
-            TClk(teclk, cond)
-          end in
-      (x', typ, tclk) in
+    let x', _, _ = Gamma.find n.lsn_loc env x in
+    let tclk = match clk with
+      | PBase -> TBase
+      | PClk(clk, cond) -> begin
+          let teclk = type_when n.lsn_loc env cond clk in
+          TClk(teclk, cond)
+        end in
+    (x', typ, tclk) in
   let input =
     List.map type_decl n.lsn_inputs
   in

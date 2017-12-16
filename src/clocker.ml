@@ -52,8 +52,8 @@ let print_clock fmt = function
 let report fmt = function
   | ExpectedSub (c1, c2) ->
     fprintf fmt
-    "This expression has clock %a but was expected be a subclock of %a."
-    print_clock c1 print_clock c2
+      "This expression has clock %a but was expected be a subclock of %a."
+      print_clock c1 print_clock c2
   | ExpectedSimple clk ->
     fprintf fmt
       "This expression has clock %a but was expected to have a simple clock"
@@ -88,18 +88,18 @@ let satisfy_signature pi (signi, signo) =
   let rec aux acc ck sg = match ck, sg with
     | _, CBase -> acc
     | Clk(clk, id, cond), CClk(sclk, sid, scond) when cond = scond -> begin
-      if aux acc clk sclk then try
-        Hashtbl.find vars sid = id
-        with Not_found -> (Hashtbl.replace vars sid id; acc)
-      else false
-    end
+        if aux acc clk sclk then try
+            Hashtbl.find vars sid = id
+          with Not_found -> (Hashtbl.replace vars sid id; acc)
+        else false
+      end
     | _ -> false
   in
   let rec replace = function
     | CBase -> Base
     | CClk(sclk, sid, cond) -> try
-      let id = Hashtbl.find vars sid in Clk(replace sclk, id, cond)
-    with  | Not_found -> assert false
+        let id = Hashtbl.find vars sid in Clk(replace sclk, id, cond)
+      with  | Not_found -> assert false
   in
   if List.fold_left2 aux true pi signi then List.map replace signo
   else assert false
@@ -170,7 +170,7 @@ and clock_expr_desc env loc = function
     let cel = List.map (clock_expr env) el in
     let celclk = List.flatten (List.map (fun x -> x.cexpr_clock) cel) in
     let clko = Delta.find f celclk in
-      CE_app (f, cel, cr), clko
+    CE_app (f, cel, cr), clko
 
   | TE_fby (e1, e2) ->
     let ce1 = clock_expr env e1 in

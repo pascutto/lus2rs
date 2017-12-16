@@ -35,9 +35,9 @@ let base_clock_of_clock = function
   | [c] -> c
   | e -> assert false
 
-  let base_typ_of_typ = function
-    | [c] -> c
-    | e -> assert false
+let base_typ_of_typ = function
+  | [c] -> c
+  | e -> assert false
 
 let rec control ck instr = match ck with
   | Base -> instr
@@ -86,9 +86,9 @@ and trans_eq env eq =
         then OS_Sequence (si, OS_State_assign (x, coe1))
         else OS_Sequence (si, OS_Var_assign (x, coe1)) in
       let news = OS_Sequence (s,
-          control
-            (base_clock_of_clock expr.cexpr_clock)
-            (OS_State_assign (x, c))) in
+                              control
+                                (base_clock_of_clock expr.cexpr_clock)
+                                (OS_State_assign (x, c))) in
       newm, newsi, j, d, news
     end
   | CE_pre e -> begin
@@ -113,17 +113,17 @@ and trans_eq env eq =
                      control
                        (base_clock_of_clock expr.cexpr_clock)
                        (OS_Step (patt.cpatt_desc, o, c))),
-                       control
-                         (base_clock_of_clock expr.cexpr_clock)
-                         (OS_Case (r', [(Cbool true), OS_Reset(o)])))
+        control
+          (base_clock_of_clock expr.cexpr_clock)
+          (OS_Case (r', [(Cbool true), OS_Reset(o)])))
     in
     m, newsi, newj, d, news
   | _ ->
     let x = List.hd patt.cpatt_desc in
     let news = OS_Sequence (s,
-        control
-          (base_clock_of_clock expr.cexpr_clock)
-          (trans_aux env x expr)) in
+                            control
+                              (base_clock_of_clock expr.cexpr_clock)
+                              (trans_aux env x expr)) in
     m, si, j, d, news
 
 and trans_eq_list env = List.fold_left trans_eq env

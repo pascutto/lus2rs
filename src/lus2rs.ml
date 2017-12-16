@@ -145,26 +145,26 @@ let () =
     if !obj_only then exit 0;
 
   with
-    | Lexing_error s ->
-    	report_loc (lexeme_start_p lb, lexeme_end_p lb);
-    	eprintf "Lexical error: %s\n@." s;
-    	exit 1
-    | Parser_lustre.Error ->
-    	report_loc (lexeme_start_p lb, lexeme_end_p lb);
-    	eprintf "Syntax error\n@.";
-    	exit 1
-    | Typer.Error(l,e) ->
-    	report_loc l;
-    	eprintf "Type error: %a\n@." Typer.report e;
-     exit 1
-    | Clocker.Error(l,e) ->
-      report_loc l;
-      eprintf "Clock error: %a\n@." Clocker.report e;
+  | Lexing_error s ->
+    report_loc (lexeme_start_p lb, lexeme_end_p lb);
+    eprintf "Lexical error: %s\n@." s;
     exit 1
-    | Scheduler.Causality(l) ->
-      report_loc l;
-      eprintf "Node not schedulable\n@.";
-      exit 1
-    | e ->
-      eprintf "Anomaly: %s\n@." (Printexc.to_string e);
-      exit 2
+  | Parser_lustre.Error ->
+    report_loc (lexeme_start_p lb, lexeme_end_p lb);
+    eprintf "Syntax error\n@.";
+    exit 1
+  | Typer.Error(l,e) ->
+    report_loc l;
+    eprintf "Type error: %a\n@." Typer.report e;
+    exit 1
+  | Clocker.Error(l,e) ->
+    report_loc l;
+    eprintf "Clock error: %a\n@." Clocker.report e;
+    exit 1
+  | Scheduler.Causality(l) ->
+    report_loc l;
+    eprintf "Node not schedulable\n@.";
+    exit 1
+  | e ->
+    eprintf "Anomaly: %s\n@." (Printexc.to_string e);
+    exit 2

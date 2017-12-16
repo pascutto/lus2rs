@@ -40,14 +40,14 @@ let new_pat ({ cexpr_type = ty; cexpr_clock = clk; cexpr_loc = loc } as e) =
       cpatt_desc = lx; cpatt_type = ty; cpatt_clock = clk; cpatt_loc = loc
     } in
     let le = List.map
-      (fun (x, t, c) ->
-        {
-          cexpr_desc = CE_ident x;
-          cexpr_type = [t];
-          cexpr_clock = [c];
-          cexpr_loc = loc
-        }
-      ) decl
+        (fun (x, t, c) ->
+           {
+             cexpr_desc = CE_ident x;
+             cexpr_type = [t];
+             cexpr_clock = [c];
+             cexpr_loc = loc
+           }
+        ) decl
     in
     decl, patt, { e with cexpr_desc = CE_tuple le }
 
@@ -117,8 +117,8 @@ let rec normalize ctx e =
     let x_eq = {
       ceq_patt = x_patt;
       ceq_expr = { e with cexpr_desc = CE_merge (e1', mat') }; }
-  in
-  (x_decl@new_vars, x_eq::new_eqs), x_expr
+    in
+    (x_decl@new_vars, x_eq::new_eqs), x_expr
 
   | CE_fby(c,e1) ->
     let (new_vars,new_eqs), e1' = normalize ctx e1 in
@@ -133,8 +133,8 @@ and normalize_list ctx l =
   let ctx, l =
     List.fold_left
       (fun (ctx,l) e ->
-	let ctx, e' = normalize ctx e in
-	ctx, e'::l ) (ctx,[]) l
+         let ctx, e' = normalize ctx e in
+         ctx, e'::l ) (ctx,[]) l
   in ctx, List.rev l
 
 and normalize_matching ctx l =

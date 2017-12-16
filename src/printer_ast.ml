@@ -68,9 +68,9 @@ let rec print_exp fmt e = match e.pexpr_desc with
   | LSE_arrow (l, r) ->
     fprintf fmt "@[(@[%a@]) -> (@[%a@])@]" print_exp l print_exp r
   | LSE_fby (l, r) ->
-      fprintf fmt "@[(@[%a@]) fby (@[%a@])@]" print_exp l print_exp r
+    fprintf fmt "@[(@[%a@]) fby (@[%a@])@]" print_exp l print_exp r
   | LSE_pre e ->
-      fprintf fmt "pre (@[%a@])" print_exp e
+    fprintf fmt "pre (@[%a@])" print_exp e
   | LSE_current e ->
     fprintf fmt "current (@[%a@])" print_exp e
   | LSE_when (e, cond, clk) -> fprintf fmt "@[(@[%a@]) when @[%a@](@[%s@])@]"
@@ -78,7 +78,7 @@ let rec print_exp fmt e = match e.pexpr_desc with
   | LSE_merge(clk,le) ->
     fprintf fmt "merge @[%a@] @[%a@]" print_exp clk print_matching le
   | LSE_tuple e_list ->
-      fprintf fmt "(@[%a@])" print_tuple_arg_list e_list
+    fprintf fmt "(@[%a@])" print_tuple_arg_list e_list
 
 and print_arg_list fmt = function
   | [] -> ()
@@ -114,9 +114,9 @@ let print_var_dec fmt (name, ty, clk) =
   match clk with
   | PBase -> fprintf fmt "%s : %a" name print_base_type ty
   | PClk(id, cond) -> fprintf fmt "%s : %a when %a(%s)" name
-                       print_base_type ty
-                       print_const cond
-                       id
+                        print_base_type ty
+                        print_const cond
+                        id
 
 let print_var_dec_list = print_list print_var_dec ";"
 
