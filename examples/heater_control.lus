@@ -19,10 +19,8 @@
 
 -- returns the absolute value of 2 reals
 node abs (v : real) returns (a : real) ;
-var aux: bool;
 let
-	aux = v >= 0.0;
-	a = if aux then v else -v ;
+	a = if v >= 0.0 then v else -v ;
 tel
 
 -- returns the average values of 2 reals
@@ -33,18 +31,14 @@ tel
 
 -- returns the maximum values of 2 reals
 node max2 (one, two  : real) returns (m : real) ;
-var aux: bool;
 let
-	aux = one > two;
-	m = if aux then one else two ;
+	m = if one > two then one else two ;
 tel
 
 -- returns the minimum values of 2 reals
 node min2 (one, two  : real) returns (m : real) ;
-var aux: bool;
 let
-	aux = one < two;
-	m = if aux then one else two ;
+	m = if one < two then one else two ;
 tel
 
 -- returns the median values of 3 reals
@@ -89,34 +83,27 @@ node heater_control(T, T1, T2, T3 : real) returns (Heat_on:bool);
 
 var V12,  V13,  V23 : bool;
 var Tguess : real;
-var aux1, aux2, aux3, aux4, aux5, aux6: bool;
 
 let
-	aux1 = noneoftree(V12, V13, V23);
-	aux2 = oneoftree(V12, V13, V23);
-	aux3 = alloftree(V12, V13, V23);
-
   V12 = abs(T1-T2) < DELTA; -- Are T1 and T2 valid?
   V13 = abs(T1-T3) < DELTA; -- Are T1 and T3 valid?
   V23 = abs(T2-T3) < DELTA; -- Are T2 and T3 valid?
 
   Tguess =
-    if aux1 then FAILURE else
-    if aux2 then Median(T1, T2, T3) else
-    if aux3 then Median(T1, T2, T3) else
+    if noneoftree(V12, V13, V23) then FAILURE else
+    if oneoftree(V12, V13, V23) then Median(T1, T2, T3) else
+    if alloftree(V12, V13, V23) then Median(T1, T2, T3) else
     -- 2 among V1, V2, V3 are false
     if V12 then Average(T1, T2) else
     if V13 then Average(T1, T3) else
                 -- V23 is necessarily true,  hence T1 is wrong
                 Average(T2, T3) ;
 
-  aux4 = Tguess = FAILURE;
-	aux5 = Tguess < TMIN;
-	aux6 = Tguess > TMAX;
   Heat_on = true ->
-    if aux4 then false else
-    if aux5 then true  else
-    if aux6 then false else pre Heat_on;
+    if Tguess = FAILURE then false else
+    if Tguess < TMIN    then true  else
+    if Tguess > TMAX    then false else
+                        pre Heat_on;
 tel
 
 

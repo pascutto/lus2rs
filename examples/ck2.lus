@@ -1,9 +1,7 @@
 node ck2_clk (c: bool; d: bool when c; e: int when d)
 returns (n: int);
-var a: bool;
 let
-  a = c and current(d);
-  n = if a then 0 else current(current(e));
+  n = if c and current(d) then 0 else current(current(e));
 tel
 
 node ck2 (c: bool; d: bool; e: int)
