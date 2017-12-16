@@ -171,15 +171,6 @@ and clock_expr_desc env loc = function
     let clko = Delta.find f celclk in
       CE_app (f, cel), clko
 
-  | TE_arrow (e1, e2) ->
-    let ce1 = clock_expr env e1 in
-    let clk1 = ce1.cexpr_clock in
-    let ce2 = clock_expr env e2 in
-    let clk2 = ce2.cexpr_clock in
-    if sub clk1 clk2 then CE_arrow (ce1, ce2), clk1
-    else if sub clk2 clk1 then CE_arrow (ce1, ce2), clk2
-    else error loc (ExpectedSub(clk2, clk1))
-
   | TE_fby (e1, e2) ->
     let ce1 = clock_expr env e1 in
     let clk1 = ce1.cexpr_clock in

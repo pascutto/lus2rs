@@ -69,7 +69,6 @@ and trans_aux env x expr = match expr.cexpr_desc with
   | CE_merge (e, ml) ->
     OS_Case ((trans_expr env e),
              List.map (fun (c, e) -> c, trans_aux env x e) ml)
-  | CE_arrow (e1, e2) -> assert false
   | _ -> OS_Var_assign (x, trans_expr env expr)
 
 and trans_eq env eq =

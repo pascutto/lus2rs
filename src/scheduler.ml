@@ -35,7 +35,6 @@ let rec add_vars_of_exp s {cexpr_desc = e} =
   match e with
   | CE_const _ -> s
   | CE_ident x -> S.add x s
-  | CE_arrow (e1, e2) -> add_vars_of_exp (add_vars_of_exp s e1) e2
   | CE_fby (e1, e2) -> add_vars_of_exp s e1
   | CE_pre e -> s
   | CE_current e -> add_vars_of_exp s e

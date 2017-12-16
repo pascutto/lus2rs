@@ -299,13 +299,7 @@ and type_expr_desc env loc = function
     with Not_found -> error loc (UnboundNode f)
   end
 
-  | LSE_arrow (e1, e2) ->
-      let te1 = type_expr env e1 in
-      let ty1 = te1.texpr_type in
-      let te2 = type_expr env e2 in
-      let ty2 = te2.texpr_type in
-      if compatible ty1 ty2 then TE_arrow (te1, te2), ty2
-      else error te2.texpr_loc (ExpectedType (ty2, ty1))
+  | LSE_arrow (e1, e2) -> assert false
 
   | LSE_fby (e1, e2) ->
     let te1 = type_expr env e1 in

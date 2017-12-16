@@ -33,7 +33,6 @@ and c_expr_desc =
   | CE_ident of Ident.t
   | CE_binop of binop * c_expr * c_expr
   | CE_unop of unop * c_expr
-  | CE_arrow of c_expr * c_expr
   | CE_fby of c_expr * c_expr
   | CE_app of Ident.t * c_expr list
   | CE_prim of Ident.t * c_expr list (* ?? *)

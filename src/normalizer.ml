@@ -120,15 +120,6 @@ let rec normalize ctx e =
     let ctx, le' = normalize_matching ctx le in
     ctx, { e with cexpr_desc = CE_merge (id, le')}
 
-  | CE_arrow (c,e1) ->
-    let (new_vars,new_eqs), e1' = normalize ctx e1 in
-    let x_decl, x_patt, x_expr = new_pat e in
-    let x_eq =
-      { ceq_patt = x_patt;
-        ceq_expr = { e with cexpr_desc = CE_arrow(c, e1') }; }
-    in
-    (x_decl@new_vars, x_eq::new_eqs), x_expr
-
   | CE_fby(c,e1) ->
     let (new_vars,new_eqs), e1' = normalize ctx e1 in
     let x_decl, x_patt, x_expr = new_pat e in

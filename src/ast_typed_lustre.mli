@@ -30,7 +30,6 @@ and t_expr_desc =
   | TE_ident of Ident.t
   | TE_binop of binop * t_expr * t_expr
   | TE_unop of unop * t_expr
-  | TE_arrow of t_expr * t_expr
   | TE_fby of t_expr * t_expr
   | TE_app of Ident.t * t_expr list
   | TE_prim of Ident.t * t_expr list (* ?? *)
