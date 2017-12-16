@@ -1,0 +1,4 @@
+node Switch(on,off: bool) returns (s: bool);
+let
+  s = if(false -> pre s) then not off else on; 
+tel

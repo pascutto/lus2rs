@@ -1,0 +1,4 @@
+node Edge (X : bool) returns (E : bool);
+let
+  E = false -> X and not pre X;
+tel

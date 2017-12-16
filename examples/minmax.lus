@@ -1,0 +1,11 @@
+node Max(A,B: real) returns (M: real);
+let
+  M = if (A >= B) then A else B;
+tel
+
+node MinMax(X : int)
+returns (min, max :  int);
+let
+  min = X -> if (X < pre min) then X else pre min;
+  max = X -> if (X > pre max) then X else pre max;
+tel

@@ -1,0 +1,5 @@
+node Average(X, Y : int)
+returns (A : int);
+let
+  A = (X + Y) / 2 ;
+tel

@@ -1,0 +1,4 @@
+node foo(a : bool) returns (b : bool);
+let
+  b = not a;
+tel
