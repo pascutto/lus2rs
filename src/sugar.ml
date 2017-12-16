@@ -24,15 +24,16 @@ and transform_expr_descr expr = match expr with
   | LSE_pre e -> LSE_pre (transform_expr e)
   | LSE_current e -> LSE_current (transform_expr e)
   | LSE_when (e1, e2, id) -> LSE_when (transform_expr e1, e2, id)
-  | LSE_merge (id, ml) ->
-    LSE_merge (id,
+  | LSE_merge (e, ml) ->
+    LSE_merge (transform_expr e,
                List.map
                  (fun (c, e) -> (c, transform_expr e)) ml)
   | LSE_tuple (el) -> LSE_tuple (List.map transform_expr el)
-  | LSE_if (id, e2, e3) ->
+  | LSE_if (e1, e2, e3) ->
+    let e1 = transform_expr e1 in
     let e2 = transform_expr e2 in
     let e3 = transform_expr e3 in
-    LSE_merge (id,
+    LSE_merge (e1,
                [ ((Cbool true), e2);
                  ((Cbool false), e3)])
 
