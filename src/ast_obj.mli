@@ -29,7 +29,7 @@ and o_statement =
   | OS_Skip
   | OS_Reset of int
   | OS_Step of Ident.t list * int * o_expr list
-  | OS_Case of Ident.t * (const * o_statement) list
+  | OS_Case of o_expr * (const * o_statement) list
 
 type o_inst = int * Ident.t
 

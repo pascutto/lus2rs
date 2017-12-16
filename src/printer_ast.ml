@@ -59,9 +59,9 @@ let rec print_exp fmt e = match e.pexpr_desc with
     fprintf fmt "@[(@[%a@]) @[%a@] (@[%a@])@]"
       print_exp e1 print_binop op print_exp e2
   | LSE_unop (op, e) -> fprintf fmt "%a(%a)" print_unop op print_exp e
-  | LSE_if (id, e2, e3) ->
-    fprintf fmt "@[if (@[%s@]) then (@[%a@]) else (@[%a@])@]"
-      id print_exp e2 print_exp e3
+  | LSE_if (e1, e2, e3) ->
+    fprintf fmt "@[if (@[%a@]) then (@[%a@]) else (@[%a@])@]"
+      print_exp e1 print_exp e2 print_exp e3
   | LSE_app (name, e_list) ->
       fprintf fmt "%s(@[%a@])" name print_arg_list e_list
   | LSE_arrow (l, r) ->
@@ -75,7 +75,7 @@ let rec print_exp fmt e = match e.pexpr_desc with
   | LSE_when (e, cond, clk) -> fprintf fmt "@[(@[%a@]) when @[%a@](@[%s@])@]"
                                  print_exp e print_const cond clk
   | LSE_merge(clk,le) ->
-    fprintf fmt "merge @[%s@] @[%a@]" clk print_matching le
+    fprintf fmt "merge @[%a@] @[%a@]" print_exp clk print_matching le
   | LSE_tuple e_list ->
       fprintf fmt "(@[%a@])" print_tuple_arg_list e_list
 

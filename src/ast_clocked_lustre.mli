@@ -39,7 +39,7 @@ and c_expr_desc =
   | CE_prim of Ident.t * c_expr list (* ?? *)
   | CE_pre of c_expr
   | CE_current of c_expr
-  | CE_merge of Ident.t * (const * c_expr) list
+  | CE_merge of c_expr * (const * c_expr) list
   | CE_when of c_expr * const * Ident.t
   | CE_tuple of c_expr list
 

@@ -85,7 +85,7 @@ and print_exp_desc fmt = function
   | TE_when (e, cond, clk) -> fprintf fmt "@[(@[%a@]) when @[%a@](@[%a@])@]"
                                 print_exp e print_const cond Ident.print clk
   | TE_merge(clk,le) ->
-    fprintf fmt "merge @[%a@] @[%a@]" Ident.print clk print_matching le
+    fprintf fmt "merge @[%a@] @[%a@]" print_exp clk print_matching le
   | TE_tuple e_list ->
       fprintf fmt "(@[%a@])" print_tuple_arg_list e_list
 

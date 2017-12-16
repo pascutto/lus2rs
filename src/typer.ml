@@ -335,17 +335,17 @@ and type_expr_desc env loc = function
     let ty = te.texpr_type in
     TE_when (te, cond, idclk), ty
 
-  | LSE_merge(id, mat) -> begin
+  | LSE_merge(e, mat) -> begin
       let tout = List.map (fun (c, e) -> type_expr env e) mat in
-let tin = List.map (fun (c, e) -> type_const c) mat in
+      let tin = List.map (fun (c, e) -> type_const c) mat in
       let tyo = all_same loc (List.map (fun x -> x.texpr_type) tout) in
       let tmat = List.combine (List.map fst mat) tout in
       let als = all_same loc tin in
-let tid, tyid, _ = Gamma.find loc env id in
-let tyi = als in
-      if compatible tyi [tyid] then
-  TE_merge(tid, tmat), tyo
-else error loc (ExpectedType (tyi, als))
+      let te = type_expr env e in
+      let tyi = als in
+      if compatible tyi te.texpr_type then
+        TE_merge(te, tmat), tyo
+      else error loc (ExpectedType (tyi, als))
   end
 
 and type_when loc env cond clk =

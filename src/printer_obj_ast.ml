@@ -68,7 +68,7 @@ and print_statement fmt = function
       print_arg_list el
   | OS_Case (id, csl) ->
     fprintf fmt "@[case (@[%a@]) @{%a@}@]"
-      Ident.print id
+      print_expr id
       print_matching csl
 
 and print_arg_list fmt = function

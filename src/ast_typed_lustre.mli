@@ -36,7 +36,7 @@ and t_expr_desc =
   | TE_prim of Ident.t * t_expr list (* ?? *)
   | TE_pre of t_expr
   | TE_current of t_expr
-  | TE_merge of Ident.t * (const * t_expr) list
+  | TE_merge of t_expr * (const * t_expr) list
   | TE_when of t_expr * const * Ident.t
   | TE_tuple of t_expr list
 

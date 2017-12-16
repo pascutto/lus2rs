@@ -216,15 +216,18 @@ and clock_expr_desc env loc = function
     then CE_when(ce, cond, id), [Clk(ceclk, id, cond)]
     else error loc (ExpectedSub([idclk], [ceclk]))
 
-  | TE_merge(id, mat) ->
-    let idck = Gamma.find env id in
+  | TE_merge(e, mat) ->
+    let ce = clock_expr env e in
+    let ck = ce.cexpr_clock in
     let cmat = List.map (fun (c, e) -> c, clock_expr env e) mat in
-    let ok = List.for_all
-        (fun (c, e) -> sub ([Clk(idck, id, c)]) e.cexpr_clock)
+    let ok =
+      (* FIXME ! Issue : ck on C(x) is not defined since x is not an ident *)
+      List.for_all
+        (fun (c, e) -> sub ck e.cexpr_clock)
         cmat
     in
     if ok
-    then CE_merge (id, cmat), [idck]
+    then CE_merge (ce, cmat), ce.cexpr_clock
     else assert false
 
   | _ -> assert false

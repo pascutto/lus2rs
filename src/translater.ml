@@ -40,7 +40,7 @@ let base_clock_of_clock = function
 
 let rec control ck instr = match ck with
   | Base -> instr
-  | Clk(clk, id, cond) -> control clk (OS_Case(id, [cond, instr]))
+  | Clk(clk, id, cond) -> control clk (OS_Case(OE_Ident id, [cond, instr]))
 
 let rec join s1 s2 = match s1, s2 with
   | OS_Case(id1, l1), OS_Case(id2, l2)
@@ -66,8 +66,8 @@ and trans_expr env e =
     assert false
 
 and trans_aux env x expr = match expr.cexpr_desc with
-  | CE_merge (id, ml) ->
-    OS_Case (id,
+  | CE_merge (e, ml) ->
+    OS_Case ((trans_expr env e),
              List.map (fun (c, e) -> c, trans_aux env x e) ml)
   | CE_arrow (e1, e2) -> assert false
   | _ -> OS_Var_assign (x, trans_expr env expr)

@@ -44,8 +44,8 @@ let rec add_vars_of_exp s {cexpr_desc = e} =
   | CE_app (_,l) -> List.fold_left add_vars_of_exp s l
   | CE_prim (_,l) -> List.fold_left add_vars_of_exp s l
   | CE_tuple l -> List.fold_left add_vars_of_exp s l
-  | CE_merge (id, mat) ->
-    List.fold_left add_vars_of_exp (S.add id s) (List.map snd mat)
+  | CE_merge (e, mat) ->
+    List.fold_left add_vars_of_exp s (e::(List.map snd mat))
   | CE_when (e, cond, clk) -> S.add clk s
 
 let schedule_equs nloc inputs equs =
