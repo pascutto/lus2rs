@@ -11,16 +11,7 @@ verbose=0
 echo "***** Testing $1 *****"
 echo
 
-compile () {
-if [[ $verbose != 0 ]]; then
-  echo Compiling $1 $2
-  ./$compiler $1 $2;
-else
-  ./$compiler $1 $2 > /dev/null 2>&1;
-fi;
-}
-
-part1 () {
+syntactic () {
   score=0
   max=0
 
@@ -29,7 +20,14 @@ part1 () {
   for f in examples/*.lus; do
     echo -n ".";
     max=`expr $max + 1`;
-    compile --parse-only $f;
+
+    if [[ $verbose != 0 ]]; then
+      echo Compiling --parse-only $f
+      ./$compiler --parse-only $f;
+    else
+      ./$compiler --parse-only $f > /dev/null 2>&1;
+    fi;
+
     case $? in
   	"1")
     	echo
@@ -47,7 +45,7 @@ part1 () {
   echo
 }
 
-part2 () {
+typing () {
   score=0
   max=0
 
@@ -57,7 +55,14 @@ part2 () {
   for f in examples/*.lus; do
     echo -n ".";
     max=`expr $max + 1`;
-    compile --type-only $f;
+
+    if [[ $verbose != 0 ]]; then
+      echo Compiling --type-only $f
+      ./$compiler --type-only $f;
+    else
+      ./$compiler --type-only $f > /dev/null 2>&1;
+    fi;
+
     case $? in
   	"1")
     	echo
@@ -75,17 +80,59 @@ part2 () {
   echo
 }
 
-part3 () {
+initializing () {
   score=0
   max=0
 
   echo
-  echo "Part 3: Clocking"
+  echo "Part 3: Initialization analysis"
 
   for f in examples/*.lus; do
     echo -n ".";
     max=`expr $max + 1`;
-    compile --clock-only $f;
+
+    if [[ $verbose != 0 ]]; then
+      echo Compiling --init-only $f
+      ./$compiler --init-only $f;
+    else
+      ./$compiler --init-only $f > /dev/null 2>&1;
+    fi;
+
+    case $? in
+  	"1")
+    	echo
+    	echo "FAIL on "$f" (should have been accepted)";;
+  	"0") score=`expr $score + 1`;;
+  	*)
+    	echo
+      echo "COMPILER FAIL on "$f"";;
+    esac
+  done
+  echo
+
+  percent=`expr 100 \* $score / $max`;
+  echo -n "Initialization: $score/$max : $percent%";
+  echo
+}
+
+clocking () {
+  score=0
+  max=0
+
+  echo
+  echo "Part 4: Clocking (no init)"
+
+  for f in examples/*.lus; do
+    echo -n ".";
+    max=`expr $max + 1`;
+
+    if [[ $verbose != 0 ]]; then
+      echo Compiling --clock-only --no-init $f
+      ./$compiler --clock-only --no-init $f;
+    else
+      ./$compiler --clock-only --no-init $f > /dev/null 2>&1;
+    fi;
+
     case $? in
   	"1")
     	echo
@@ -103,17 +150,24 @@ part3 () {
   echo
 }
 
-part4 () {
+normalizing () {
   score=0
   max=0
 
   echo
-  echo "Part 3: Normalizing"
+  echo "Part 5  : Normalizing (no init)"
 
   for f in examples/*.lus; do
     echo -n ".";
     max=`expr $max + 1`;
-    compile --norm-only $f;
+
+    if [[ $verbose != 0 ]]; then
+      echo Compiling --norm-only --no-init $f
+      ./$compiler --norm-only --no-init $f;
+    else
+      ./$compiler --norm-only --no-init $f > /dev/null 2>&1;
+    fi;
+
     case $? in
   	"1")
     	echo
@@ -131,17 +185,24 @@ part4 () {
   echo
 }
 
-part5 () {
+scheduling () {
   score=0
   max=0
 
   echo
-  echo "Part 5: Scheduling"
+  echo "Part 6: Scheduling (no init)"
 
   for f in examples/*.lus; do
     echo -n ".";
     max=`expr $max + 1`;
-    compile --schedule-only $f;
+
+    if [[ $verbose != 0 ]]; then
+      echo Compiling --schedule-only --no-init $f
+      ./$compiler --schedule-only --no-init $f;
+    else
+      ./$compiler --schedule-only --no-init $f > /dev/null 2>&1;
+    fi;
+
     case $? in
   	"1")
     	echo
@@ -159,17 +220,24 @@ part5 () {
   echo
 }
 
-part6 () {
+translating () {
   score=0
   max=0
 
   echo
-  echo "Part 6: Translating"
+  echo "Part 7: Translating (no init)"
 
   for f in examples/*.lus; do
     echo -n ".";
     max=`expr $max + 1`;
-    compile --obj-only $f;
+
+    if [[ $verbose != 0 ]]; then
+      echo Compiling --obj-only --no-init $f
+      ./$compiler --obj-only --no-init $f;
+    else
+      ./$compiler --obj-only --no-init $f > /dev/null 2>&1;
+    fi;
+
     case $? in
   	"1")
     	echo
@@ -190,18 +258,20 @@ part6 () {
 case $2  in
     "-v")
       verbose=1;
-      part1;
-      part2;
-      part3;
-      part4;
-      part5;
-      part6;;
+      syntactic;
+      typing;
+      initializing;
+      clocking;
+      normalizing;
+      scheduling;
+      translating;;
     *)
-      part1;
-      part2;
-      part3;
-      part4;
-      part5;
-      part6;;
+      syntactic;
+      typing;
+      initializing;
+      clocking;
+      normalizing;
+      scheduling;
+      translating;;
 esac
 echo

@@ -22,6 +22,8 @@ let usage = "usage: "^Sys.argv.(0)^" [options] file.lus main"
 
 let parse_only = ref false
 let type_only = ref false
+let init_only = ref false
+let no_init = ref false
 let clock_only = ref false
 let norm_only = ref false
 let schedule_only = ref false
@@ -33,6 +35,10 @@ let spec =
    "-p", Arg.Set parse_only, "  stops after parsing";
    "--type-only", Arg.Set type_only, "  stops after typing";
    "-t", Arg.Set type_only, "  stops after typing";
+   "--init-only", Arg.Set init_only, "  stops after init analysis";
+   "-i", Arg.Set init_only, "  stops after init analysis";
+   "--no-init", Arg.Set no_init, "  does not perform init analysis";
+   "-ni", Arg.Set no_init, "  does not perform init analysis";
    "--clock-only", Arg.Set clock_only, "  stops after clocking";
    "-c", Arg.Set clock_only, "  stops after clocking";
    "--schedule-only", Arg.Set schedule_only, "  stops after scheduling";
@@ -91,7 +97,6 @@ let () =
       Format.printf "/**************************************/@.";
       Printer_ast.print_program fsu
     end;
-
     if !parse_only then exit 0;
 
     (* Typing *)
@@ -103,6 +108,23 @@ let () =
       Printer_typed_ast.print_program_v ft
     end;
     if !type_only then exit 0;
+
+    (* Initialization analysis *)
+    if !no_init then begin
+      if !verbose then begin
+        Format.printf "/**************************************/@.";
+        Format.printf "/*       Initialization IGNORED       */@.";
+        Format.printf "/**************************************/@.";
+      end
+    end
+    else
+      Initializer.itype_program ft;
+      if !verbose then begin
+        Format.printf "/**************************************/@.";
+        Format.printf "/*         Initialization OK          */@.";
+        Format.printf "/**************************************/@.";
+      end;
+    if !init_only then exit 0;
 
     (* Clocking *)
     let fc = Clocker.clock_program ft in
@@ -156,6 +178,9 @@ let () =
   | Typer.Error(l,e) ->
     report_loc l;
     eprintf "Type error: %a\n@." Typer.report e;
+    exit 1
+  | Initializer.Error(e) ->
+    eprintf "Initialization error\n@.";
     exit 1
   | Clocker.Error(l,e) ->
     report_loc l;
